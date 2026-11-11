@@ -4,7 +4,7 @@
 # compile CUDA with /usr/local/cuda/bin/nvcc
 CUDA_DEFINES = 
 
-CUDA_INCLUDES = -I/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness -I/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/include -I/usr/local/cuda/include
+CUDA_INCLUDES = -I/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness -I/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/include -I/usr/local/cuda/include
 
 CUDA_FLAGS = -g -G -std=c++14
 

@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness
+CMAKE_SOURCE_DIR = /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness
+CMAKE_BINARY_DIR = /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness
 
 # Include any dependencies generated for this target.
 include src/CMakeFiles/cudaLib.dir/depend.make
@@ -344,6 +344,8 @@ src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/inclu
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/cuda_device_runtime_api.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/cuda_runtime.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/cuda_runtime_api.h
+src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/cuda_surface_types.h
+src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/cuda_texture_types.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/curand.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/curand_discrete.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/curand_discrete2.h
@@ -366,9 +368,6 @@ src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/inclu
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/driver_functions.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/driver_types.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/library_types.h
-src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/nv/detail/__preprocessor
-src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/nv/detail/__target_macros
-src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/nv/target
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/sm_20_atomic_functions.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/sm_20_atomic_functions.hpp
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/sm_20_intrinsics.h
@@ -385,8 +384,10 @@ src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/inclu
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/sm_60_atomic_functions.hpp
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/sm_61_intrinsics.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/sm_61_intrinsics.hpp
+src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/surface_functions.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/surface_indirect_functions.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/surface_types.h
+src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/texture_fetch_functions.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/texture_indirect_functions.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/texture_types.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/vector_functions.h
@@ -394,33 +395,33 @@ src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/inclu
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: /usr/local/cuda/include/vector_types.h
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o.Debug.cmake
 src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o: src/cudaLib.cu
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building NVCC (Device) object src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o"
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir && /usr/bin/cmake -E make_directory /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir//.
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir && /usr/bin/cmake -D verbose:BOOL=$(VERBOSE) -D build_configuration:STRING=Debug -D generated_file:STRING=/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir//./cudaLib_generated_cudaLib.cu.o -D generated_cubin_file:STRING=/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir//./cudaLib_generated_cudaLib.cu.o.cubin.txt -P /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir//cudaLib_generated_cudaLib.cu.o.Debug.cmake
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building NVCC (Device) object src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o"
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir && /usr/bin/cmake -E make_directory /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir//.
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir && /usr/bin/cmake -D verbose:BOOL=$(VERBOSE) -D build_configuration:STRING=Debug -D generated_file:STRING=/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir//./cudaLib_generated_cudaLib.cu.o -D generated_cubin_file:STRING=/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir//./cudaLib_generated_cudaLib.cu.o.cubin.txt -P /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir//cudaLib_generated_cudaLib.cu.o.Debug.cmake
 
 # Object files for target cudaLib
 cudaLib_OBJECTS =
 
 # External object files for target cudaLib
 cudaLib_EXTERNAL_OBJECTS = \
-"/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o"
+"/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o"
 
 src/libcudaLib.a: src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o
 src/libcudaLib.a: src/CMakeFiles/cudaLib.dir/build.make
 src/libcudaLib.a: src/CMakeFiles/cudaLib.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libcudaLib.a"
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src && $(CMAKE_COMMAND) -P CMakeFiles/cudaLib.dir/cmake_clean_target.cmake
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/cudaLib.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libcudaLib.a"
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src && $(CMAKE_COMMAND) -P CMakeFiles/cudaLib.dir/cmake_clean_target.cmake
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/cudaLib.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 src/CMakeFiles/cudaLib.dir/build: src/libcudaLib.a
 .PHONY : src/CMakeFiles/cudaLib.dir/build
 
 src/CMakeFiles/cudaLib.dir/clean:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src && $(CMAKE_COMMAND) -P CMakeFiles/cudaLib.dir/cmake_clean.cmake
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src && $(CMAKE_COMMAND) -P CMakeFiles/cudaLib.dir/cmake_clean.cmake
 .PHONY : src/CMakeFiles/cudaLib.dir/clean
 
 src/CMakeFiles/cudaLib.dir/depend: src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/CMakeFiles/cudaLib.dir/depend
 

@@ -36,8 +36,8 @@
 
 	typedef struct ImageDim_t
 	{
-		uint32_t width;
 		uint32_t height;
+		uint32_t width;
 		uint32_t channels;
 		uint32_t pixelSize;
 	} ImageDim;
@@ -71,10 +71,19 @@
 	extern std::ostream& operator<< (std::ostream &o,PoolOp op);
 
 	typedef struct TensorShape_t {
-		uint32_t height;	//	Height = # rows
-		uint32_t width;		//	Width = # cols
-		uint32_t channels;	//	
+		uint32_t count;		//	4th dimension	-	Quite unimaginative .. I know
+		uint32_t channels;	//	3rd dimension
+		uint32_t height;	//	Height = # rows	-	2nd dimension
+		uint32_t width;		//	Width = # cols	-	1st dimension
 	} TensorShape;
+
+	extern std::ostream& operator << (std::ostream &o, const TensorShape & t);
+	extern void printTensor(float* tensor, TensorShape shape);
+
+	extern uint64_t tensorSize (const TensorShape & t);
+	extern uint64_t tensorSize1D (const TensorShape & t);
+	extern uint64_t tensorSize2D (const TensorShape & t);
+	extern uint64_t tensorSize3D (const TensorShape & t);
 
 	typedef struct PoolLayerArgs_t {
 		PoolOp opType;
@@ -101,5 +110,98 @@
 
 	extern int runCpuPool (TensorShape inShape, PoolLayerArgs poolArgs);
 	
+
+
+	////    Lab 3    ////
+	
+	typedef struct TensorInitArgs_t {
+		uint32_t tid;
+		uint32_t numThreads;
+		TensorShape shape;
+		float* tensor;
+	} TensorInitArgs;
+
+	typedef struct ConvLayerArgs_t {
+		uint32_t padH;
+		uint32_t padW;
+		uint32_t strideH;
+		uint32_t strideW;
+		bool activation;
+	} ConvLayerArgs;
+
+	extern void tensorInit(float* tensor, TensorShape &shape);
+	extern int makeTensor (float ** t, TensorShape & shape);
+	extern int makeVector (float ** v, uint64_t size);
+
+	#define ALEXNET_LAYER1
+	#ifdef ALEXNET_LAYER1
+	const TensorShape AlexL1_InShape 		= {1, 3, 227, 227};
+	const TensorShape AlexL1_FilterShape	= {96, 3, 11, 11};
+	const ConvLayerArgs AlexL1_ConvArgs 	= {0, 0, 4, 4, false};
+	#endif
+	#ifdef ALEXNET_LAYER2
+	const TensorShape AlexL1_InShape 		= {1, 96, 27, 27};
+	const TensorShape AlexL1_FilterShape	= {256, 96, 5, 5};
+	const ConvLayerArgs AlexL1_ConvArgs 	= {2, 2, 1, 1, false};
+	#endif
+	#ifdef ALEXNET_LAYER3
+	const TensorShape AlexL1_InShape 		= {1, 256, 13, 13};
+	const TensorShape AlexL1_FilterShape	= {384, 256, 3, 3};
+	const ConvLayerArgs AlexL1_ConvArgs 	= {0, 0, 1, 1, false};
+	#endif
+	#ifdef ALEXNET_LAYER4
+	const TensorShape AlexL1_InShape 		= {1, 384, 13, 13};
+	const TensorShape AlexL1_FilterShape	= {384, 384, 3, 3};
+	const ConvLayerArgs AlexL1_ConvArgs 	= {1, 1, 1, 1, false};
+	#endif
+	#ifdef ALEXNET_LAYER5
+	const TensorShape AlexL1_InShape 		= {1, 384, 13, 13};
+	const TensorShape AlexL1_FilterShape	= {256, 384, 3, 3};
+	const ConvLayerArgs AlexL1_ConvArgs 	= {1, 1, 1, 1, false};
+	#endif
+
+
+	extern int runCpuConv (int argc, char ** argv);
+
+	extern int executeCpuConv (TensorShape iShape, TensorShape fShape, 
+		TensorShape & oShape, ConvLayerArgs args);
+
+	#define IDX2R(r, c, cDim) ((r) * (cDim) + (c))
+
+	/**
+	 * @brief 
+	 * 
+	 * @param input 
+	 * @param iShape 
+	 * @param filter 
+	 * @param fShape 
+	 * @param bias 
+	 * @param output 
+	 * @param oShape 
+	 * @param args 
+	 * @param batchSize 
+	 * @return int 
+	 */
+	extern int convLayer_cpu( float * input, TensorShape iShape,
+		float * filter, TensorShape fShape,
+		float * bias, float * output, TensorShape & oShape, 
+		ConvLayerArgs & args, uint32_t batchSize);
+
+	typedef struct GemmLayerArgs_t {
+		uint32_t tileH;
+		uint32_t tileW;
+		uint32_t subTileCount;
+	} GemmLayerArgs;
+
+	extern int runCpuGemm (int argc, char ** argv);
+
+	extern int executeCpuGemm (TensorShape aShape, TensorShape bShape, 
+		TensorShape & cShape, GemmLayerArgs args);
+
+	extern int gemmLayer_cpu (float * a, TensorShape aShape,
+		float * b, TensorShape bShape, float * c, TensorShape & cShape,
+		GemmLayerArgs & args, uint32_t batchSize);
+
+	void printTensor (float * t, TensorShape shape);
 
 #endif

@@ -1,9 +1,11 @@
-#include "cpuLib.h"
+#include <thread>
+#include <random>
 #include <chrono>
-using namespace std::chrono;
+#include <pthread.h>
+#include "cpuLib.h"
 
-#define DEBUG_PRINT_DISABLE
-
+#define DEBUG_PRINT_DISABLE // Disables some debug prints
+#define PARALLEL_INIT // Enables parallel tensor initialization
 
 void dbprintf(const char* fmt...) {
 	#ifndef DEBUG_PRINT_DISABLE
@@ -149,7 +151,7 @@ int runCpuMCPi(uint64_t iterationCount, uint64_t sampleSize) {
 		for (uint64_t idx = 0; idx < sampleSize; ++idx) {
 			x = dist(random_device);
 			y = dist(random_device);
-
+			
 			if ( int(x * x + y * y) == 0 ) {
 				++ hitCount;
 			}
@@ -167,11 +169,10 @@ int runCpuMCPi(uint64_t iterationCount, uint64_t sampleSize) {
 	//	Calculate Pi
 	float approxPi = ((double)totalHitCount / sampleSize) / iterationCount;
 	approxPi = approxPi * 4.0f;
-
+		
 	std::cout << std::setprecision(10);
 	std::cout << "Estimated Pi = " << approxPi << "\n";
-
-
+		
 	auto tEnd= std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = (tEnd- tStart);
@@ -207,7 +208,7 @@ int loadBytesImage(std::string bytesFilePath, ImageDim &imgDim, uint8_t ** imgDa
 
 	std::cout << "Found " << fileDim.height << " x " << fileDim.width
 		<< " x " << fileDim.channels << " x " << fileDim.pixelSize << " \n";
-
+	
 	uint64_t numBytes = fileDim.height * fileDim.width * fileDim.channels;
 	*imgData = (uint8_t *) malloc(numBytes * sizeof(uint8_t));
 	if (imgData == nullptr) {
@@ -225,7 +226,7 @@ int loadBytesImage(std::string bytesFilePath, ImageDim &imgDim, uint8_t ** imgDa
 	imgDim.pixelSize	= fileDim.pixelSize;
 
 	bytesFile.close();
-
+	
 	return bytesFile.gcount();
 
 }
@@ -245,7 +246,7 @@ int writeBytesImage (std::string outPath, ImageDim &imgDim, uint8_t * outData) {
 	bytesFile.write((char *) outData, numBytes * sizeof(uint8_t));
 
 	bytesFile.close();
-	return 0;
+	return sizeof(imgDim) + numBytes * sizeof(uint8_t);
 }
 
 int medianFilter_cpu (uint8_t * inPixels, ImageDim imgDim, uint8_t * outPixels, MedianFilterArgs args) {
@@ -309,11 +310,11 @@ int runCpuMedianFilter (std::string imgPath, std::string outPath, MedianFilterAr
 	std::cout << "Size = " << imgSize << "\n";
 	uint8_t * outData = (uint8_t *) malloc(imgSize * sizeof(uint8_t));
 
-	auto start = high_resolution_clock::now();
+	auto start = std::chrono::high_resolution_clock::now();
 	medianFilter_cpu(imgData, imgDim, outData, args);
-	auto stop = high_resolution_clock::now();
+	auto stop = std::chrono::high_resolution_clock::now();
 
-	auto duration = duration_cast<microseconds>(stop - start);
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 	std::cout << "Execution time was: " << duration.count() << " ms\n";
 	writeBytesImage(outPath, imgDim, outData);
 	return 0;
@@ -435,9 +436,9 @@ int runCpuPool (TensorShape inShape, PoolLayerArgs poolArgs) {
 	float outMatrix[outH * outW * inShape.channels]; 
 
 	// Pool
-	auto start = high_resolution_clock::now();
+	auto start = std::chrono::high_resolution_clock::now();
 	poolLayer_cpu(inMatrix, inShape, outMatrix, outShape, poolArgs);
-	auto stop = high_resolution_clock::now();
+	auto stop = std::chrono::high_resolution_clock::now();
 
 	#ifndef DEBUG_PRINT_DISABLE
 	// Print output matrix
@@ -452,7 +453,358 @@ int runCpuPool (TensorShape inShape, PoolLayerArgs poolArgs) {
 	}
 	#endif
 
-	auto duration = duration_cast<microseconds>(stop - start);
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 	std::cout << "Execution time was: " << duration.count() << " ms\n";
+	return 0;
+}
+
+
+std::ostream& operator << (std::ostream &o, const TensorShape & t) {
+	return (
+		o << "Tensor : " 
+		<< t.count << " x " << t.channels << " x "
+		<< t.height << " x " << t.width << " "
+	);
+
+}
+
+void printTensor(float* tensor, TensorShape shape) {
+	if(tensor == NULL) {
+		return;
+	}
+
+	for (uint32_t count = 0; count < shape.count; ++count) {
+		printf("Tensor count: %d\n", count);
+		for (uint32_t chIdx = 0; chIdx < shape.channels; ++chIdx ) {
+			printf("Channel: %d\n", chIdx);
+			for (uint32_t rowIdx = 0; rowIdx < shape.height; ++rowIdx) {
+				for (uint32_t colIdx = 0; colIdx < shape.width; ++colIdx) {
+					uint32_t offset = count * shape.channels * shape.width * shape.height + chIdx * shape.height * shape.width + rowIdx * shape.width + colIdx;
+					printf("%f ", tensor[offset]);
+				}
+				printf("\n");
+			}
+			printf("\n");
+		}
+		printf("\n\n");
+	}
+}
+
+uint64_t tensorSize (const TensorShape & t) {
+	uint64_t size =  ( (uint64_t)t.count * t.channels * t.height * t.width );
+	if (size == 0) {
+		std::cout << "Invalid shape parameters \n";
+	}
+	return size;
+}
+
+void* tensorThread(void* arg) { // Per thread tensor init function
+    TensorInitArgs* targs = (TensorInitArgs*) arg;
+	uint32_t numElements = ceil((float) tensorSize(targs->shape) / targs->numThreads);
+    uint32_t start = targs->tid * numElements;
+	srand(time(NULL));
+	std::mt19937 generator(std::random_device{}());
+	std::uniform_real_distribution<float> distribution(0.0, 1.0);
+
+    for(uint32_t i = start; i < start + numElements; i++) {
+		if(i < tensorSize(targs->shape)) {
+			targs->tensor[i] = distribution(generator);
+		}
+    }
+	return NULL;
+}
+
+
+void tensorInit(float* tensor, TensorShape &shape) { // Multithreadded Tensor Init
+	const auto procs = std::thread::hardware_concurrency();
+	uint32_t numThreads = procs == 0 ? 4 : (procs - 1 < 16 ? procs - 1 : 16); // Get threads of the host (max of 16)
+	pthread_t threads[numThreads];
+	TensorInitArgs *targs = (TensorInitArgs*) malloc(sizeof(TensorInitArgs) * numThreads);
+
+	// Spawn threads
+	for (uint32_t i = 0; i < numThreads; i++) {
+		targs[i] = {i, numThreads, shape, tensor};
+		pthread_create(&threads[i], NULL, tensorThread, &targs[i]);
+	}
+
+	// Join
+	for (uint32_t i = 0; i < numThreads; i++) {
+		pthread_join(threads[i], NULL);
+	}
+	free(targs);
+}
+
+
+int makeTensor (float ** t, TensorShape & shape) {
+	if (*t != nullptr) {
+		std::cout << "Pointer already points to memory ! \n";
+		return -1;
+	}
+
+	if (shape.count == 0) {
+		std::cout << " Shape has invalid count (4th dim) - setting to 1 \n";
+		shape.count = 1;
+	}
+
+	uint64_t tensorSize = shape.height * shape.width * shape.channels * shape.count;
+	*t = (float *) malloc (tensorSize * sizeof(float));
+
+	if (*t == nullptr) {
+		std::cout << "Malloc failed ! \n";
+		return -2;
+	}
+
+	float * m = * t;
+	#ifdef PARALLEL_INIT
+	tensorInit(m, shape);
+	#else
+	uint64_t offset;
+	srand(time(NULL));
+	std::mt19937 generator(std::random_device{}());
+	std::uniform_real_distribution<float> distribution(0.0, 1.0);
+
+	//	Implement NCHW layout
+	for (uint32_t count = 0; count < shape.count; ++ count) {
+		for (uint32_t chIdx = 0; chIdx < shape.channels; ++ chIdx ) {
+			for (uint32_t rowIdx = 0; rowIdx < shape.height; ++ rowIdx) {
+				for (uint32_t colIdx = 0; colIdx < shape.width; ++ colIdx) {
+					offset = count * shape.channels * shape.width * shape.height + chIdx * shape.height * shape.width + rowIdx * shape.width + colIdx;
+					m[offset] = distribution(generator);
+				}
+			}
+		}
+	}
+	#endif
+	
+	return 0;
+}
+
+int makeVector (float ** v, uint64_t size) {
+	if (*v != nullptr) {
+		std::cout << "Pointer already points to memory ! \n";
+		return -1;
+	}
+
+	*v = (float *) malloc (size * sizeof(float));
+
+	float * m = * v;
+
+	srand(time(NULL));
+	std::mt19937 generator(std::random_device{}());
+	std::uniform_real_distribution<float> distribution(0.0, 1.0);
+
+	//	Implement NCHW layout
+	for (uint64_t idx = 0; idx < size; ++ idx) {
+		m[idx] = distribution(generator);
+	}
+	return 0;
+}
+
+
+int runCpuConv (int argc, char ** argv) {
+
+	TensorShape iShape = AlexL1_InShape;
+	TensorShape fShape = AlexL1_FilterShape;
+	TensorShape oShape;
+	ConvLayerArgs convArgs = AlexL1_ConvArgs;
+
+	executeCpuConv (iShape, fShape, oShape, convArgs);
+	return 0;
+}
+
+int executeCpuConv (TensorShape iShape, TensorShape fShape, 
+	TensorShape & oShape, ConvLayerArgs args) {
+
+	oShape.count = 1; // May scale with batch
+	oShape.channels = fShape.count;
+	oShape.height = ((iShape.height - fShape.height + args.padH * 2) / args.strideH) + 1;
+	oShape.width = ((iShape.width - fShape.width + args.padW * 2) / args.strideW) + 1;
+	float * in = nullptr;
+	float * filter = nullptr;
+	float * bias = nullptr; 
+	float * out = nullptr;
+
+	int retVal;
+	retVal = makeTensor(&in, iShape);
+	if (retVal != 0) {
+		std::cout << "Unable to make tensor \n" ;
+		return -1;
+	}
+	retVal = makeTensor(&filter, fShape);
+	if (retVal != 0) {
+		std::cout << "Unable to make tensor \n" ;
+		return -1;
+	}
+	retVal = makeVector(&bias, oShape.channels);
+	if (retVal != 0) {
+		std::cout << "Unable to make vector \n" ;
+		return -1;
+	}
+	std::cout << "OutShape : " << oShape << " \n";
+	out = (float *) malloc (tensorSize(oShape) * sizeof(float));
+
+	convLayer_cpu(in, iShape, filter, fShape, bias, out, oShape, args, oShape.count);
+
+	free(in);
+	free(filter);
+	free(bias);
+	free(out);
+	return 0;
+}
+
+int convLayer_cpu( float * input, TensorShape iShape, 
+	float * filter, TensorShape fShape, 
+	float * bias, float * output, TensorShape & oShape, 
+	ConvLayerArgs & args, uint32_t batchSize) {
+
+	//	Convolution in CPU
+	for (uint32_t n = 0; n < batchSize; ++ n) {
+		for (uint32_t m = 0; m < oShape.channels; ++ m) {
+			for (uint32_t h = 0; h < oShape.height; ++ h ) {
+				for (uint32_t w = 0; w < oShape.width; ++ w) {
+					uint32_t oBatchOff = n * oShape.channels * oShape.width * oShape.height;
+					uint32_t oChannelOff = m * oShape.width * oShape.height;
+					uint32_t index = oBatchOff + oChannelOff + (h * oShape.width) + w;
+					output[index] = bias[m];
+
+					for (uint32_t i = 0; i < fShape.height; ++ i) {
+						for (uint32_t j = 0; j < fShape.width; ++ j) {
+							for (uint32_t k = 0; k < fShape.channels; ++ k) {
+								int inH = h * args.strideH - args.padH + i;
+								int inW = w * args.strideW - args.padW + j;
+
+								if (inH >= 0 && inH < (int) iShape.height && inW >= 0 && inW < (int) iShape.width) {
+									uint32_t iBatchOff = n * iShape.channels * iShape.width * iShape.height;
+									uint32_t iChannelOff = k * iShape.width * iShape.height;
+									uint32_t fBatchOff = m * fShape.channels * fShape.width * fShape.height;
+									uint32_t fChannelOff = k * fShape.width * fShape.height;
+									float one = input[iBatchOff + iChannelOff + (inH * iShape.width) + inW];
+									float two = filter[fBatchOff + fChannelOff + (i * fShape.width) + j];
+									output[index] += one * two;
+								}
+							}
+						}
+					}
+					if (args.activation) {
+						//	O[n][m][x][y] = Activation( O[n][m][x][y] );
+						std::cout << "Activation not implemented.\n";
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+void matMulNaiveCpu (int N, int *a, int *b, int *c) {
+    int i, j, k;
+    for (j = 0; j < N; ++ j) {
+        for (i=0; i<N; i++) {
+            c[i*N + j] = 0;
+        }
+    }
+    
+    for (k=0; k<N; k++) {
+        for (j=0; j<N; j++) {
+            for (i=0; i<N; i++) {
+                c[i*N + j] += a[i*N + k] * b[k*N + j];
+            }
+        }
+    }
+}
+
+
+
+int runCpuGemm (int argc, char ** argv) {
+
+	TensorShape aShape = {1, 1, 6, 4};
+	TensorShape bShape = {1, 1, 4, 8};
+	TensorShape cShape;
+	GemmLayerArgs args = {2, 2, 1};
+
+	executeCpuGemm(aShape, bShape, cShape, args);
+	return 0;
+}
+
+int executeCpuGemm (TensorShape aShape, TensorShape bShape, 
+	TensorShape & cShape, GemmLayerArgs args) {
+
+	if (aShape.width != bShape.height || aShape.channels != bShape.channels 
+		|| aShape.count != bShape.count) {
+		std::cout << "Dimensions dont match : " << aShape << " x " << bShape << " \n";
+		return -1;
+	}
+
+	cShape.height = aShape.height;
+	cShape.width = bShape.width;
+	cShape.channels = aShape.channels;
+	cShape.count = aShape.count;
+
+	float * a = nullptr;
+	float * b = nullptr;
+
+	makeTensor(& a, aShape);
+	makeTensor(& b, bShape);
+
+	std::cout << "cShape : " << cShape << " \n";
+	float * c = (float *) malloc(tensorSize(cShape) * sizeof(float));
+
+	gemmLayer_cpu (a, aShape, b, bShape, c, cShape, args, cShape.count);
+
+	#ifndef DEBUG_PRINT_DISABLE
+	printf("\nCPU Output\n");
+	for(uint32_t y = 0; y < cShape.height; y++) {
+		for(uint32_t x = 0; x < cShape.width; x++) {
+			printf("%f ", c[y * cShape.width + x]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+	#endif
+
+	return 0;
+}
+
+
+int gemmLayer_cpu (float * a, TensorShape aShape,
+	float * b, TensorShape bShape,
+	float * c, TensorShape & cShape,
+	GemmLayerArgs & args, uint32_t batchSize) {
+	
+
+    int tilesAlongW = (cShape.width + args.tileW - 1) / args.tileW;
+    int tilesAlongH = (cShape.height + args.tileH - 1) / args.tileH;
+    int subTilesAlongK = (aShape.width + args.tileH - 1) / args.tileH;
+    int tileId = 0;
+
+
+	while (tileId < tilesAlongW * tilesAlongH) {
+        int offsetH = (tileId / tilesAlongW) * args.tileH;
+        int offsetW = (tileId % tilesAlongW) * args.tileW;
+        int rowIdx, colIdx;
+        int row, col, subTile, subTileK, k;
+
+        for (subTile = 0; subTile < subTilesAlongK; ++ subTile) {
+            for (row = 0; row < args.tileH; ++ row) {
+                for (col = 0; col < args.tileW; ++ col) {
+                    rowIdx = row + offsetH;
+                    colIdx = col + offsetW;
+
+                    //  Check bounds of actual output matrix
+                    if (rowIdx < cShape.height && colIdx < cShape.width) {
+						if (subTile == 0)
+                        	c[IDX2R(rowIdx, colIdx, cShape.width)] = 0;
+                        for (subTileK = 0; subTileK < args.tileH; ++ subTileK) {
+                            k = subTile * args.tileH + subTileK;
+                            if (k < aShape.width) {
+                                c[IDX2R(rowIdx, colIdx, cShape.width)] += a[IDX2R(rowIdx, k, aShape.width)] * b[IDX2R(k, colIdx, bShape.width)];
+                            }
+                        }
+                    }
+                }
+            }
+		}
+		++ tileId;
+    }
 	return 0;
 }

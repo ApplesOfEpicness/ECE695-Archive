@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness
+CMAKE_SOURCE_DIR = /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness
+CMAKE_BINARY_DIR = /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,14 +87,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/CMakeFiles /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src//CMakeFiles/progress.marks
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/CMakeFiles 0
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src//CMakeFiles/progress.marks
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/clean
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/clean
 .PHONY : clean
 
 # The main clean target
@@ -103,22 +103,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/preinstall
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/preinstall
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/CMakeFiles/cudaLib.dir/rule:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/cudaLib.dir/rule
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/cudaLib.dir/rule
 .PHONY : src/CMakeFiles/cudaLib.dir/rule
 
 # Convenience name for target.
@@ -127,12 +127,12 @@ cudaLib: src/CMakeFiles/cudaLib.dir/rule
 
 # fast build rule for target.
 cudaLib/fast:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/cudaLib.dir/build.make src/CMakeFiles/cudaLib.dir/build
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/cudaLib.dir/build.make src/CMakeFiles/cudaLib.dir/build
 .PHONY : cudaLib/fast
 
 # Convenience name for target.
 src/CMakeFiles/cpuLib.dir/rule:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/cpuLib.dir/rule
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/cpuLib.dir/rule
 .PHONY : src/CMakeFiles/cpuLib.dir/rule
 
 # Convenience name for target.
@@ -141,7 +141,7 @@ cpuLib: src/CMakeFiles/cpuLib.dir/rule
 
 # fast build rule for target.
 cpuLib/fast:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/build
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/build
 .PHONY : cpuLib/fast
 
 cpuLib.o: cpuLib.cpp.o
@@ -149,7 +149,7 @@ cpuLib.o: cpuLib.cpp.o
 
 # target to build an object file
 cpuLib.cpp.o:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/cpuLib.cpp.o
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/cpuLib.cpp.o
 .PHONY : cpuLib.cpp.o
 
 cpuLib.i: cpuLib.cpp.i
@@ -157,7 +157,7 @@ cpuLib.i: cpuLib.cpp.i
 
 # target to preprocess a source file
 cpuLib.cpp.i:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/cpuLib.cpp.i
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/cpuLib.cpp.i
 .PHONY : cpuLib.cpp.i
 
 cpuLib.s: cpuLib.cpp.s
@@ -165,7 +165,7 @@ cpuLib.s: cpuLib.cpp.s
 
 # target to generate assembly for a file
 cpuLib.cpp.s:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/cpuLib.cpp.s
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/cpuLib.cpp.s
 .PHONY : cpuLib.cpp.s
 
 # Help Target
@@ -192,6 +192,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

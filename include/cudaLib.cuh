@@ -11,6 +11,9 @@
 	// Uncomment this to suppress console output
 	// #define DEBUG_PRINT_DISABLE
 
+	//	Uncomment this to disable error counting
+	//	#define CONV_CHECK_DISABLE 
+
 	#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__, true); }
 	extern void gpuAssert(cudaError_t code, const char *file, int line, bool abort);
 
@@ -109,7 +112,7 @@
 	 * @param imgDim 	ImageDim			struct converying the diemnsionality of inPixels
 	 * @param outPixels uint8_t *			pointer to output of medianFilter
 	 * @param args 		MedianFilterArgs	struct with settings for median filter
-	 * @return void
+	 * @return int 
 	 */
 	extern __global__ void medianFilter_gpu (uint8_t * inPixels, ImageDim imgDim, 
 		uint8_t * outPixels, MedianFilterArgs args);
@@ -121,7 +124,7 @@
 	 *								(Can point to anywhere within the addressable memory heirarchy)
 	 * @param arrayDim 	dim3		provides upto 3 dimensions to convey how the data chunk 
 	 *								pointed to by array is organized
-	 * @return void
+	 * @return int 
 	 */
 	extern __device__ void sortPixels_gpu (uint8_t * array, dim3 arrayDim);
 
@@ -145,9 +148,82 @@
 	 * @param output 	float *			pointer to output tensor
 	 * @param outShape 	TensorShape		dimensions of output tensor
 	 * @param args 		PoolLayerArgs	parameters of pool operation
-	 * @return void 
+	 * @return int 
 	 */
 	extern __global__ void poolLayer_gpu (float * input, TensorShape inShape,
 		float * output, TensorShape outShape, PoolLayerArgs args);
+
+	extern float* cudaMakeTensor(TensorShape & shape);
+	extern float* cudaMakeTensorUnified(TensorShape & shape);
+	extern float* cudaMakeVector(uint64_t size);
+
+	/**
+	 * @brief 
+	 * 
+	 * @param argc 
+	 * @param argv 
+	 * @return int 
+	 */
+	extern int runGpuConv (int argc, char ** argv);
+
+	/**
+	 * @brief 
+	 * 
+	 * @param iShape 	TensorShape
+	 * @param fShape 	TensorShape
+	 * @param oShape 	TensorShape &		output tensor dimensions - reference
+	 * @param args 		ConvLayerArgs
+	 * @return 			uint64_t	 	number of errors
+	 */
+	extern int evaluateGpuConv (TensorShape iShape, TensorShape fShape, 
+		TensorShape & oShape, ConvLayerArgs args);
+	
+	/**
+	 * @brief 
+	 * 
+	 * @param input 	float *
+	 * @param iShape 	TensorShape
+	 * @param filter 	float *
+	 * @param fShape 	TensorShape
+	 * @param bias 		float *
+	 * @param output 	float *
+	 * @param oShape 	TensorShape		dimensions of output tensor
+	 * @param args 		ConvLayerArgs	parameters for convolution operation
+	 * @param batchSize uint32_t		
+	 * @return void
+	 */
+	extern __global__ void convLayer_gpu (float * input, TensorShape iShape, 
+		float * filter, TensorShape fShape, 
+		float * bias, float * output, TensorShape oShape, 
+		ConvLayerArgs args, volatile uint32_t batchSize);
+
+	typedef struct GemmTileArgs_t {
+		uint32_t tileX;
+		uint32_t tileY;
+	} GemmTileArgs;
+
+	extern int runGpuGemm (int argc, char ** argv);
+	extern int runGpuGemm (uint32_t, uint32_t, uint32_t);
+
+	extern __global__ void gemmLayer_gpu (float * a, TensorShape aShape, 
+		float * b, TensorShape bShape,
+		float * o, TensorShape cShape,
+		GemmLayerArgs args, uint32_t batchSize);
+
+	// Slower, sequential subtile calculation
+	extern __global__ void gemmLayerSeq_gpu (float * a, TensorShape aShape, 
+		float * b, TensorShape bShape,
+		float * o, TensorShape cShape,
+		GemmLayerArgs args, uint32_t batchSize);
+
+	extern __global__ void gemmTile_gpu (float * a, TensorShape aShape, 
+		float * b, TensorShape bShape,
+		float * o, TensorShape cShape,
+		GemmLayerArgs args, GemmTileArgs targs);
+
+	extern int runGpuGemm (int argc, char ** argv);
+
+	extern int evaluateGpuGemm (TensorShape aShape, TensorShape bShape, 
+		TensorShape oShape, GemmLayerArgs args);
 
 #endif

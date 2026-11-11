@@ -6,22 +6,31 @@ cmake_policy(SET CMP0074 NEW)
 set(CMAKE_BUILD_TYPE Debug)
 
 # enable C++14 standard
-set(CMAKE_CXX_STANDARD 14)  
+set(CMAKE_CXX_STANDARD 14)
+
+# enable seperate compillation for dynamic parallelism
+set(CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
 # Project name and a few useful settings. Other commands can pick up the results
 project(
-  Lab1
-  VERSION 0.1
-  DESCRIPTION "An simple project with CUDA"
+  Lab3
+  VERSION 1.0
+  DESCRIPTION "AlexNet CUDA Project"
   LANGUAGES CXX CUDA)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 find_package(CUDA REQUIRED)
 
-list(APPEND CUDA_NVCC_FLAGS "--std=c++14")
+list(APPEND CUDA_NVCC_FLAGS "-std=c++14" "-arch=sm_52" "-rdc=true")
 
 option(USE_CUDA "Use CUDA" ON)
+
+message(STATUS "CMAKE_CUDA_COMPILER = ${CMAKE_CUDA_COMPILER}")
+message(STATUS "CMAKE_CUDA_COMPILER_ID = ${CMAKE_CUDA_COMPILER_ID}")
+message(STATUS "CMAKE_CUDA_COMPILER_VERSION = ${CMAKE_CUDA_COMPILER_VERSION}")
+message(STATUS "*Note that this code does not support CUDA version 12 and later.")
 
 file(GLOB cpu_header_files "${CMAKE_SOURCE_DIR}/include/*.h")
 file(GLOB cpu_source_files "${CMAKE_SOURCE_DIR}/src/*.cpp")
@@ -51,9 +60,9 @@ if( ("${CMAKE_VERSION}" VERSION_EQUAL 3.8) OR
         
         # add_executable(saxpy_cpu "${CMAKE_SOURCE_DIR}/src/saxpy_cpu.cpp")
         # add_executable(saxpy_gpu "${CMAKE_SOURCE_DIR}/src/saxpy_gpu.cu")
-        add_executable(lab2 "${CMAKE_SOURCE_DIR}/lab2.cu" "${CMAKE_SOURCE_DIR}/lab2.cuh")
-        target_link_libraries(lab2 cudaLib)
-        target_link_libraries(lab2 cpuLib)
+        add_executable(lab3 "${CMAKE_SOURCE_DIR}/lab3.cu" "${CMAKE_SOURCE_DIR}/lab3.cuh")
+        target_link_libraries(lab3 cudaLib)
+        target_link_libraries(lab3 cpuLib)
 
         # add_executable(lab1_tester "${CMAKE_SOURCE_DIR}/lab1_tester.cu" "${CMAKE_SOURCE_DIR}/lab1_tester.cuh")
         # target_link_libraries(lab1_tester cpuLib)
@@ -61,7 +70,8 @@ if( ("${CMAKE_VERSION}" VERSION_EQUAL 3.8) OR
         # target_link_libraries(lab1_tester -lcublas -lcurand)
         
         # add_executable(AlexNet ${cpu_header_files} ${cpu_source_files} ${gpu_header_files} ${gpu_source_files})
-    else(USE_CUDA)
+        set_target_properties(lab3 PROPERTIES CUDA_ARCHITECTURES "52")
+        else(USE_CUDA)
         add_executable(saxpy ${cpu_header_files} ${cpu_source_files})
     endif()
 else()
