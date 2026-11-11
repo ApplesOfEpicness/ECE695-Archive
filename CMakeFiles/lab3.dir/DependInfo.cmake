@@ -8,13 +8,13 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/lab3.cu" "CMakeFiles/lab3.dir/lab3.cu.o" "gcc" "CMakeFiles/lab3.dir/lab3.cu.o.d"
+  "/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/lab3.cu" "CMakeFiles/lab3.dir/lab3.cu.o" "gcc" "CMakeFiles/lab3.dir/lab3.cu.o.d"
   )
 
 # Targets to which this target links.
 set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir/DependInfo.cmake"
-  "/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/CMakeFiles/cpuLib.dir/DependInfo.cmake"
+  "/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir/DependInfo.cmake"
+  "/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/src/CMakeFiles/cpuLib.dir/DependInfo.cmake"
   )
 
 # Fortran module output directory.

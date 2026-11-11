@@ -27,23 +27,14 @@ int main(int argc, char** argv) {
 	std::cout << "  5 - Bytes-Image File Test \n";
 	std::cout << "  6 - Median Filter CPU \n";
 	std::cout << "  7 - Median Filter GPU \n";
-	std::cout << "  8 - Pool CPU \n";
-	std::cout << "  9 - Pool GPU \n";
-	std::cout << "  12 - Convolution on CPU \n";
-	std::cout << "  13 - Convolution on GPU \n";
-	std::cout << "  14 - Matrix Multiply on CPU \n";
-	std::cout << "  15 - Matrix Multiply on GPU \n";
+	std::cout << "  100 - AlexNet on GPU \n";
 
 	std::cin >> choice;
 
 	std::cout << "\n";
 	std::cout << "Choice selected - " << choice << "\n\n";
 
-	PoolLayerArgs poolArgs;
 	MedianFilterArgs filArgs;
-	TensorShape inShape;
-
-
 	switch (choice) {
 		//  CPU only SAXPY
 		case 1:
@@ -92,77 +83,99 @@ int main(int argc, char** argv) {
 				"./resources/lena512color_fil.bytes", filArgs);
 			std::cout << "\n\n ... Done!\n";
 			break;
-
-		case 8:
-			
-			std::cout << "Running Pool CPU! \n\n";
-			inShape = {1, 3, 32, 32};
-			poolArgs = {PoolOp::MaxPool, 4, 4, 1, 1};
-			runCpuPool(inShape, poolArgs);
-			std::cout << "\n\n ... Done!\n";
-			break;
-			
-		case 9:
-			std::cout << "Running Pool GPU! \n\n";
-			inShape = {1, 3, 32, 32};
-			poolArgs = {PoolOp::MaxPool, 4, 4, 1, 1};
-			runGpuPool(inShape, poolArgs);
-			std::cout << "\n\n ... Done!\n";
-			break;
-
-		case 12:
-			std::cout << "Running ConvLayer on CPU! \n\n";
-			runCpuConv(argc, argv);
-			std::cout << "\n\n ... Done!\n";
-			break;
-			
-		case 13:
-			std::cout << "Running ConvLayer on GPU! \n\n";
-			runGpuConv(argc, argv);
-			std::cout << "\n\n ... Done!\n";
-			break;
-			
-		case 14:
-			std::cout << "Running GemmLayer on CPU! \n\n";
-			runCpuGemm(argc, argv);
-			std::cout << "\n\n ... Done!\n";
-			break;
-			
-		case 15:
-			std::cout << "Running GemmLayer on GPU! \n\n";
-			runGpuGemm(argc, argv);
-			std::cout << "\n\n ... Done!\n";
-			break;
-		case 16:
-			std::cout << "Running GemmLayer Customized on GPU! \n\n";
-			runGpuGemm(4096, 1024, 4096);
-			std::cout << "\n\n ... Done!\n";
-			break;
-		case 17:
+		case 100:
 		{
-			std::cout << "Running GemmLayer Stress on GPU! \n\n";
+			std::cout << "Running AlexNet! \n\n";
+			srand(time(NULL));
+			bool printen = false;
 
-			uint32_t errors = 0;
-			for(uint32_t a = 1; a < 17; a++) {
-				for(uint32_t b = 1; b < 17; b++) {
-					for(uint32_t c = 1; c < 17; c++) {
-						errors += runGpuGemm(a, b, c);
-						printf("\n");
-					}
-					
-				}
-			}
-			for(uint32_t a = 125; a < 130; a++) {
-				for(uint32_t b = 125; b < 130; b++) {
-					for(uint32_t c = 125; c < 130; c++) {
-						errors += runGpuGemm(a, b, c);
-						printf("\n");
-					}
-					
-				}
-			}
-			printf("Total Errors: %d\n", errors);
-			std::cout << "\n\n ... Done!\n";
+			// Initial Input 
+			uint32_t batch = 5;
+			TensorShape inShape = AlexL1_InShape;
+			inShape.count = batch;
+			PoolLayerArgs pArgs = {PoolOp::MaxPool, 3, 3, 2, 2}; // Max pool, 3x3, strides of 2
+			float* inTensor = NULL;
+			inTensor = cudaMakeTensorUnified(inShape);
+			TensorObject in = {inShape, inTensor};
+			TensorObject out;
+
+			// Conv
+			auto start = std::chrono::high_resolution_clock::now();
+			runGpuConv(&out, &in, AlexL1_FilterShape, AlexL1_ConvArgs);
+			in.shape = out.shape;
+			in.tensor = out.tensor;
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }
+
+			// Max Pool
+			runGpuPool(&out, &in, pArgs);
+			in.shape = out.shape;
+			in.tensor = out.tensor;
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }
+
+			// Conv
+			runGpuConv(&out, &in, AlexL2_FilterShape, AlexL2_ConvArgs);
+			in.shape = out.shape;
+			in.tensor = out.tensor;
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }
+
+			// Max Pool
+			runGpuPool(&out, &in, pArgs);
+			in.shape = out.shape;
+			in.tensor = out.tensor;
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }
+
+			// Conv
+			runGpuConv(&out, &in, AlexL3_FilterShape, AlexL3_ConvArgs);
+			in.shape = out.shape;
+			in.tensor = out.tensor;
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }
+
+			// Conv
+			runGpuConv(&out, &in, AlexL4_FilterShape, AlexL4_ConvArgs);
+			in.shape = out.shape;
+			in.tensor = out.tensor;
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }			
+
+			// Conv
+			runGpuConv(&out, &in, AlexL5_FilterShape, AlexL5_ConvArgs);
+			in.shape = out.shape;
+			in.tensor = out.tensor;
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }
+
+			// Max Pool
+			runGpuPool(&out, &in, pArgs);
+			in.shape = out.shape;
+			in.tensor = out.tensor;
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }
+
+			// Flatten the Layer (batch, 1, 1, 9216)
+			in.shape.channels = 1;
+			in.shape.height = 1;
+			in.shape.width = out.shape.width * out.shape.height * out.shape.channels;
+
+			// GEMM
+			TensorShape weights = {batch, 1, in.shape.width, 4096};
+			runGpuGemm(&out, &in, weights);
+			in.shape = out.shape;
+			in.tensor = out.tensor;
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }
+
+			// GEMM
+			weights = {batch, 1, 4096, 4096};
+			runGpuGemm(&out, &in, weights);
+			in.shape = out.shape;
+			in.tensor = out.tensor;
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }
+
+			// GEMM
+			weights = {batch, 1, 4096, 1000};
+			runGpuGemm(&out, &in, weights);
+			if(printen) { std::cout << out.shape << " Ptr: " << out.tensor << "\n"; }
+
+			auto stop = std::chrono::high_resolution_clock::now();
+			auto durationGPU = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+			std::cout << "AlexNet final output size is: " << out.shape << "\n";
+			std::cout << "AlexNet execution time was: " << durationGPU.count() << " ms\n";
 			break;
 		}
 		default:

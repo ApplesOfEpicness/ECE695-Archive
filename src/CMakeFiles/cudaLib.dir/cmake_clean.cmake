@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o"
+  "CMakeFiles/cudaLib.dir/cudaLib_intermediate_link.o"
   "libcudaLib.a"
   "libcudaLib.pdb"
 )

@@ -134,11 +134,11 @@
 	 *			- execute gpu kernel to pool
 	 *			- verify pooling - report # errors
 	 * 
-	 * @param inShape 	dimensions of input tensor
-	 * @param poolArgs 	PoolLayerArgs	parameters of pool operation
-	 * @return int 		number of errors in pooled output
+	 * @param inObj 	input tensor object
+	 * @param poolArgs 	PoolLayerArgs parameters of pool operation
+	 * @return TensorObject output tensor object
 	 */
-	extern int runGpuPool (TensorShape inShape, PoolLayerArgs poolArgs);
+	extern void runGpuPool (TensorObject* out, TensorObject* inObj, PoolLayerArgs poolArgs);
 
 	/**
 	 * @brief GPU kernel to perform 2D Pool operation
@@ -157,26 +157,19 @@
 	extern float* cudaMakeTensorUnified(TensorShape & shape);
 	extern float* cudaMakeVector(uint64_t size);
 
-	/**
-	 * @brief 
-	 * 
-	 * @param argc 
-	 * @param argv 
-	 * @return int 
-	 */
-	extern int runGpuConv (int argc, char ** argv);
+	extern void runGpuConv (TensorObject* out, TensorObject* inObj, TensorShape fShape, ConvLayerArgs args);
 
 	/**
 	 * @brief 
 	 * 
-	 * @param iShape 	TensorShape
+	 * @param inObj 	TensorObject
 	 * @param fShape 	TensorShape
 	 * @param oShape 	TensorShape &		output tensor dimensions - reference
 	 * @param args 		ConvLayerArgs
-	 * @return 			uint64_t	 	number of errors
+	 * @return 			float* 				pointer to output tensor
 	 */
-	extern int evaluateGpuConv (TensorShape iShape, TensorShape fShape, 
-		TensorShape & oShape, ConvLayerArgs args);
+	extern float* evaluateGpuConv (TensorObject* inObj, TensorShape fShape, 
+		TensorShape oShape, ConvLayerArgs args);
 	
 	/**
 	 * @brief 
@@ -202,16 +195,12 @@
 		uint32_t tileY;
 	} GemmTileArgs;
 
-	extern int runGpuGemm (int argc, char ** argv);
-	extern int runGpuGemm (uint32_t, uint32_t, uint32_t);
+	extern void runGpuGemm (TensorObject* out, TensorObject* in, TensorShape weights);
+
+	extern float* evaluateGpuGemm (TensorObject* aObj, TensorShape bShape, 
+		TensorShape oShape, GemmLayerArgs args);
 
 	extern __global__ void gemmLayer_gpu (float * a, TensorShape aShape, 
-		float * b, TensorShape bShape,
-		float * o, TensorShape cShape,
-		GemmLayerArgs args, uint32_t batchSize);
-
-	// Slower, sequential subtile calculation
-	extern __global__ void gemmLayerSeq_gpu (float * a, TensorShape aShape, 
 		float * b, TensorShape bShape,
 		float * o, TensorShape cShape,
 		GemmLayerArgs args, uint32_t batchSize);
@@ -220,10 +209,5 @@
 		float * b, TensorShape bShape,
 		float * o, TensorShape cShape,
 		GemmLayerArgs args, GemmTileArgs targs);
-
-	extern int runGpuGemm (int argc, char ** argv);
-
-	extern int evaluateGpuGemm (TensorShape aShape, TensorShape bShape, 
-		TensorShape oShape, GemmLayerArgs args);
 
 #endif

@@ -1,4 +1,4 @@
-# Install script for directory: /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src
+# Install script for directory: /home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

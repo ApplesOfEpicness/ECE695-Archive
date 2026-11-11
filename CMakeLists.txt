@@ -6,31 +6,22 @@ cmake_policy(SET CMP0074 NEW)
 set(CMAKE_BUILD_TYPE Debug)
 
 # enable C++14 standard
-set(CMAKE_CXX_STANDARD 14)
-
-# enable seperate compillation for dynamic parallelism
-set(CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+set(CMAKE_CXX_STANDARD 14)  
 
 # Project name and a few useful settings. Other commands can pick up the results
 project(
-  Lab3
-  VERSION 1.0
-  DESCRIPTION "AlexNet CUDA Project"
+  Lab1
+  VERSION 0.1
+  DESCRIPTION "An simple project with CUDA"
   LANGUAGES CXX CUDA)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 find_package(CUDA REQUIRED)
 
-list(APPEND CUDA_NVCC_FLAGS "-std=c++14" "-arch=sm_52" "-rdc=true")
+list(APPEND CUDA_NVCC_FLAGS "--std=c++14")
 
 option(USE_CUDA "Use CUDA" ON)
-
-message(STATUS "CMAKE_CUDA_COMPILER = ${CMAKE_CUDA_COMPILER}")
-message(STATUS "CMAKE_CUDA_COMPILER_ID = ${CMAKE_CUDA_COMPILER_ID}")
-message(STATUS "CMAKE_CUDA_COMPILER_VERSION = ${CMAKE_CUDA_COMPILER_VERSION}")
-message(STATUS "*Note that this code does not support CUDA version 12 and later.")
 
 file(GLOB cpu_header_files "${CMAKE_SOURCE_DIR}/include/*.h")
 file(GLOB cpu_source_files "${CMAKE_SOURCE_DIR}/src/*.cpp")
@@ -70,8 +61,7 @@ if( ("${CMAKE_VERSION}" VERSION_EQUAL 3.8) OR
         # target_link_libraries(lab1_tester -lcublas -lcurand)
         
         # add_executable(AlexNet ${cpu_header_files} ${cpu_source_files} ${gpu_header_files} ${gpu_source_files})
-        set_target_properties(lab3 PROPERTIES CUDA_ARCHITECTURES "52")
-        else(USE_CUDA)
+    else(USE_CUDA)
         add_executable(saxpy ${cpu_header_files} ${cpu_source_files})
     endif()
 else()

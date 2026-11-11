@@ -54,10 +54,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness
+CMAKE_SOURCE_DIR = /home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness
+CMAKE_BINARY_DIR = /home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness
 
 #=============================================================================
 # Directory level rules for the build root directory
@@ -101,14 +101,14 @@ CMakeFiles/lab3.dir/all: src/CMakeFiles/cudaLib.dir/all
 CMakeFiles/lab3.dir/all: src/CMakeFiles/cpuLib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lab3.dir/build.make CMakeFiles/lab3.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/lab3.dir/build.make CMakeFiles/lab3.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles --progress-num=5,6 "Built target lab3"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles --progress-num=6,7 "Built target lab3"
 .PHONY : CMakeFiles/lab3.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/lab3.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles 6
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles 7
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/lab3.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles 0
 .PHONY : CMakeFiles/lab3.dir/rule
 
 # Convenience name for target.
@@ -127,14 +127,14 @@ CMakeFiles/lab3.dir/clean:
 src/CMakeFiles/cudaLib.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/cudaLib.dir/build.make src/CMakeFiles/cudaLib.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/cudaLib.dir/build.make src/CMakeFiles/cudaLib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles --progress-num=3,4 "Built target cudaLib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles --progress-num=3,4,5 "Built target cudaLib"
 .PHONY : src/CMakeFiles/cudaLib.dir/all
 
 # Build rule for subdir invocation for target.
 src/CMakeFiles/cudaLib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles 3
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/cudaLib.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles 0
 .PHONY : src/CMakeFiles/cudaLib.dir/rule
 
 # Convenience name for target.
@@ -153,14 +153,14 @@ src/CMakeFiles/cudaLib.dir/clean:
 src/CMakeFiles/cpuLib.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles --progress-num=1,2 "Built target cpuLib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles --progress-num=1,2 "Built target cpuLib"
 .PHONY : src/CMakeFiles/cpuLib.dir/all
 
 # Build rule for subdir invocation for target.
 src/CMakeFiles/cpuLib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles 2
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/cpuLib.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles 0
 .PHONY : src/CMakeFiles/cpuLib.dir/rule
 
 # Convenience name for target.

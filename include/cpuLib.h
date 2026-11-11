@@ -77,6 +77,11 @@
 		uint32_t width;		//	Width = # cols	-	1st dimension
 	} TensorShape;
 
+	typedef struct TensorObject_t { // Stores a tensor's size and associated pointer
+		TensorShape shape;
+		float* tensor = NULL;
+	} TensorObject;
+
 	extern std::ostream& operator << (std::ostream &o, const TensorShape & t);
 	extern void printTensor(float* tensor, TensorShape shape);
 
@@ -133,32 +138,25 @@
 	extern int makeTensor (float ** t, TensorShape & shape);
 	extern int makeVector (float ** v, uint64_t size);
 
-	#define ALEXNET_LAYER1
-	#ifdef ALEXNET_LAYER1
 	const TensorShape AlexL1_InShape 		= {1, 3, 227, 227};
 	const TensorShape AlexL1_FilterShape	= {96, 3, 11, 11};
 	const ConvLayerArgs AlexL1_ConvArgs 	= {0, 0, 4, 4, false};
-	#endif
-	#ifdef ALEXNET_LAYER2
-	const TensorShape AlexL1_InShape 		= {1, 96, 27, 27};
-	const TensorShape AlexL1_FilterShape	= {256, 96, 5, 5};
-	const ConvLayerArgs AlexL1_ConvArgs 	= {2, 2, 1, 1, false};
-	#endif
-	#ifdef ALEXNET_LAYER3
-	const TensorShape AlexL1_InShape 		= {1, 256, 13, 13};
-	const TensorShape AlexL1_FilterShape	= {384, 256, 3, 3};
-	const ConvLayerArgs AlexL1_ConvArgs 	= {0, 0, 1, 1, false};
-	#endif
-	#ifdef ALEXNET_LAYER4
-	const TensorShape AlexL1_InShape 		= {1, 384, 13, 13};
-	const TensorShape AlexL1_FilterShape	= {384, 384, 3, 3};
-	const ConvLayerArgs AlexL1_ConvArgs 	= {1, 1, 1, 1, false};
-	#endif
-	#ifdef ALEXNET_LAYER5
-	const TensorShape AlexL1_InShape 		= {1, 384, 13, 13};
-	const TensorShape AlexL1_FilterShape	= {256, 384, 3, 3};
-	const ConvLayerArgs AlexL1_ConvArgs 	= {1, 1, 1, 1, false};
-	#endif
+
+	const TensorShape AlexL2_InShape 		= {1, 96, 27, 27}; // For reference
+	const TensorShape AlexL2_FilterShape	= {256, 96, 5, 5};
+	const ConvLayerArgs AlexL2_ConvArgs 	= {2, 2, 1, 1, false};
+
+	const TensorShape AlexL3_InShape 		= {1, 256, 13, 13}; // For reference
+	const TensorShape AlexL3_FilterShape	= {384, 256, 3, 3};
+	const ConvLayerArgs AlexL3_ConvArgs 	= {1, 1, 1, 1, false};
+
+	const TensorShape AlexL4_InShape 		= {1, 384, 13, 13}; // For reference
+	const TensorShape AlexL4_FilterShape	= {384, 384, 3, 3};
+	const ConvLayerArgs AlexL4_ConvArgs 	= {1, 1, 1, 1, false};
+
+	const TensorShape AlexL5_InShape 		= {1, 384, 13, 13}; // For reference
+	const TensorShape AlexL5_FilterShape	= {256, 384, 3, 3};
+	const ConvLayerArgs AlexL5_ConvArgs 	= {1, 1, 1, 1, false};
 
 
 	extern int runCpuConv (int argc, char ** argv);

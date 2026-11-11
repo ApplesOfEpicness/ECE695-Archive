@@ -1,4 +1,4 @@
-# Install script for directory: /home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness
+# Install script for directory: /home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -44,7 +44,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/src/cmake_install.cmake")
+  include("/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/src/cmake_install.cmake")
 
 endif()
 
@@ -56,5 +56,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/jerry/ECE60827/cuda-programming-assignment-3-ApplesOfEpicness/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

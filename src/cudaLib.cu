@@ -4,7 +4,7 @@
 #include <chrono>
 
 // See individual sections for algrithm specifc defines & enables
-//#define DEBUG_PRINT_DISABLE // Disables debug printing
+#define DEBUG_PRINT_DISABLE // Disables debug printing
 #define FP_ERROR 0.005 // Tolerated FP calculation error (actual value not %)
 #define PARALLEL_INIT // Enables parallel tensor initialization
 
@@ -431,123 +431,52 @@ void sortPixels_gpu (uint8_t * array, dim3 arrayDim) {
 //*****************************************************************************
 // POOLING
 //*****************************************************************************
-int runGpuPool (TensorShape inShape, PoolLayerArgs poolArgs) {
+void runGpuPool (TensorObject* out, TensorObject* inObj, PoolLayerArgs poolArgs) {
 	TensorShape outShape;
-	srand(time(NULL));
+	TensorShape inShape = inObj->shape;
 
 	// Sanitize Inputs
-	if(inShape.width < poolArgs.poolW || inShape.height < poolArgs.poolH) {
-		std::cout << "Pool size cannot exceed input size.\n";
-		return -1;
-	}
-	if(inShape.width < 1 || inShape.height < 1 || inShape.channels < 1) {
-		std::cout << "Invalid input matrix.\n";
-		return -1;
-	}
-	if(poolArgs.poolW < 1 || poolArgs.poolH < 1 || poolArgs.strideW < 1 || poolArgs.strideH < 1) {
-		std::cout << "Invalid pool arguements.\n";
-		return -1;
-	}
+	assert(inShape.width >= poolArgs.poolW && inShape.height >= poolArgs.poolH);
+	assert(inShape.width >= 1 && inShape.height >= 1 && inShape.channels >= 1 && inShape.count >= 1);
+	assert(poolArgs.poolW >= 1 && poolArgs.poolH >= 1 && poolArgs.strideW >= 1 && poolArgs.strideH >= 1);
 
-	// Create the input matrix (NCHW)
-	float* inMatrix;
-	float inCPU[tensorSize(inShape)];
-	
-	if(cudaMallocManaged(&inMatrix, tensorSize(inShape) * sizeof(float)) != cudaSuccess) {
-		printf("Unable to cudaMalloc input memory ... Exiting!\n");
-		return -1;
-	}
-	for(int i = 0; i < tensorSize(inShape); i++) {
-		//inMatrix[i] = (float) i;
-		inMatrix[i] = static_cast<float>(std::rand()) / static_cast<float>(std::rand());
-	}
-	memcpy(inCPU, inMatrix, tensorSize(inShape) * sizeof(float));
+	// Get Input Tensor
+	float* inMatrix = inObj->tensor;
 
 	// Allocate the output matrix
 	int padding = 0; // No padding for now
-	outShape.count = 1;
+	outShape.count = inShape.count;
 	outShape.channels = inShape.channels;
 	outShape.height = ((inShape.height - poolArgs.poolH + padding * 2) / poolArgs.strideH) + 1;;
 	outShape.width = ((inShape.width - poolArgs.poolW + padding * 2) / poolArgs.strideW) + 1;
-	float* outMatrix; 
-
-	if(cudaMallocManaged(&outMatrix, tensorSize(outShape) * sizeof(float)) != cudaSuccess) {
-		printf("Unable to cudaMalloc output memory ... Exiting!\n");
-		return -1;
-	}
+	float *outMatrix; 
+	assert(cudaMallocManaged(&outMatrix, tensorSize(outShape) * sizeof(float)) == cudaSuccess);
 
 	// Split pooling per output pixel
 	float blockSize = 1024;
 	float blockDim = sqrt(blockSize);
 	dim3 bDims(blockDim, blockDim);
 	dim3 gDims(ceil(outShape.width / blockDim), ceil(outShape.height / blockDim));
-	uint32_t tileH = ((outShape.height - 1) * poolArgs.strideH) - (padding * 2) + poolArgs.poolH; //ALLOCATES TOO MUCH MEMORY!
+	uint32_t tileH = ((outShape.height - 1) * poolArgs.strideH) - (padding * 2) + poolArgs.poolH;
 	uint32_t tileW = ((outShape.width - 1) * poolArgs.strideW) - (padding * 2) + poolArgs.poolW;
-	cudaStream_t streams[inShape.channels];
+	cudaStream_t streams[inShape.count * inShape.channels];
 
-	// Run one stream/kernel per channel
-	auto start = std::chrono::high_resolution_clock::now();
-	for(uint32_t channel = 0; channel < inShape.channels; channel++) {
-		float* input = &inMatrix[channel * inShape.width * inShape.height];
-		float* output = &outMatrix[channel * outShape.width * outShape.height];
+	// Run one stream/kernel per channel/kernel
+	for(uint32_t count = 0; count < inShape.count; count++) {
+		for(uint32_t channel = 0; channel < inShape.channels; channel++) {
+			float* input = &inMatrix[count * inShape.channels * inShape.width * inShape.height + channel * inShape.width * inShape.height];
+			float* output = &outMatrix[count * outShape.channels * outShape.width * outShape.height + channel * outShape.width * outShape.height];
 
-		cudaStreamCreate(&streams[channel]);
-		poolLayer_gpu<<<gDims, bDims, tileH * tileW * sizeof(float), streams[channel]>>>(input, inShape, output, outShape, poolArgs);\
+			cudaStreamCreate(&streams[count * inShape.channels + channel]);
+			poolLayer_gpu<<<gDims, bDims, tileH * tileW * sizeof(float), streams[count * inShape.channels + channel]>>>(input, inShape, output, outShape, poolArgs);
+		}
 	}
 	gpuErrchk(cudaPeekAtLastError());
 	gpuErrchk(cudaDeviceSynchronize());
-	auto stop = std::chrono::high_resolution_clock::now();
 
-	// Run CPU version
-	float outCPU[outShape.width * outShape.height * outShape.channels];
-	poolLayer_cpu(inCPU, inShape, outCPU, outShape, poolArgs);
-	// Count any errors 
-	int errors = 0;
-	for(int chan = 0; chan < inShape.channels; chan++) {
-		for(int y = 0; y < outShape.height; y++) {
-			for(int x = 0; x < outShape.width; x++) {
-				uint32_t idx = chan * outShape.width * outShape.height + (x + y * outShape.width);
-				if(outMatrix[idx] != outCPU[idx]) {
-					errors++;
-					#ifndef DEBUG_PRINT_DISABLE
-					std::cout << "Error detected in x: " << x << " y: " << y << " channel: " << chan << "\n";
-					std::cout << "Got: " << outMatrix[idx] << ", Expected: " << outCPU[idx] << ".\n\n";
-					#endif
-				}
-			}
-		}
-	}
-	std::cout << "Errors: " << errors << ".\n";
-
-	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-	std::cout << "Execution time was: " << duration.count() << " ms\n";
-
-	// Matrix printer
-	#ifndef DEBUG_PRINT_DISABLE
-	// Print input matrix
-	for(int chan = 0; chan < inShape.channels; chan++) {
-		std::cout << "\nINPUT MATRIX CHANNEL " << chan + 1 << "\n\n";
-		for(int y = 0; y < inShape.height; y++) {
-			for(int x = 0; x < inShape.width; x++) {
-				std::cout << inMatrix[chan * inShape.width * inShape.height + (x + y * inShape.width)] << " ";
-			}
-			std::cout << "\n";
-		}
-	}
-	std::cout << "\n";
-	// Print output matrix
-	for(int chan = 0; chan < inShape.channels; chan++) {
-		std::cout << "\nOUTPUT MATRIX CHANNEL " << chan + 1 << "\n\n";
-		for(int y = 0; y < outShape.height; y++) {
-			for(int x = 0; x < outShape.width; x++) {
-				std::cout << outMatrix[chan * outShape.width * outShape.height + (x + y * outShape.width)] << " ";
-			}
-			std::cout << "\n";
-		}
-	}
-	#endif
-
-	return errors;
+	out->shape = outShape;
+	out->tensor = outMatrix;
+	cudaFree(inMatrix);
 }
 
 
@@ -709,56 +638,41 @@ float* cudaMakeVector(uint64_t size) {
 //*****************************************************************************
 #define CONV_TILE_SIZE 1936 // Size of the shared tile in Bytes (11 x 11 x 4 floats or 22 x 22 x 1 floats)
 #define CONV_FILTER_DIM_MAX 22 // Maximum dimension of the convolution filter (per channel)
-//#define CONV_CHECK_DISABLE // Disables error checking
 
 
-int runGpuConv (int argc, char ** argv) {
-	
+void runGpuConv (TensorObject* out, TensorObject* inObj, TensorShape fShape, ConvLayerArgs convArgs) {
+	TensorShape iShape = inObj->shape;
 	TensorShape oShape;
-	TensorShape iShape = AlexL1_InShape;
-	TensorShape fShape = AlexL1_FilterShape;
-	ConvLayerArgs convArgs = AlexL1_ConvArgs;
 
-	std::cout << "Evaluate convolution : \n";
-	std::cout << "Input : " << iShape << " \n";
-	std::cout << "Filter : " << fShape << " \n";
-
-	oShape.count = 1;
+	oShape.count = iShape.count;
 	oShape.channels = fShape.count;
 	oShape.height = ((iShape.height - fShape.height + convArgs.padH * 2) / convArgs.strideH) + 1;
 	oShape.width = ((iShape.width - fShape.width + convArgs.padW * 2) / convArgs.strideW) + 1;
-
-	int errorCount = evaluateGpuConv(iShape, fShape, oShape, convArgs);
-	std::cout << "Found " << errorCount << " / " << tensorSize(oShape) << " errors \n";
-	return 0;
+	out->shape = oShape;
+	out->tensor = evaluateGpuConv(inObj, fShape, oShape, convArgs);
 }
 
 
-int evaluateGpuConv (TensorShape iShape, TensorShape fShape, 
-	TensorShape & oShape, ConvLayerArgs args) {
+float* evaluateGpuConv (TensorObject* inObj, TensorShape fShape, 
+	TensorShape oShape, ConvLayerArgs args) {
 
-	uint64_t errorCount = 0;
+	TensorShape iShape = inObj->shape;
 	float *in, *out, *filter, *bias;
 
-	// Allocate and init input tensor
-	std::cout << "Making input tensor...\n";
-	in = cudaMakeTensorUnified(iShape);
-	std::cout << "Making filter tensor...\n";
+	// init input tensor
+	in = inObj->tensor;
 	filter = cudaMakeTensorUnified(fShape);
-	std::cout << "Making bias vector...\n";
 	bias = cudaMakeVector(oShape.channels);
 
 	if(in == NULL || filter == NULL || bias == NULL) {
-		return -1;
+		return NULL;
 	}
 
 	// Init the ouput tensor
-	std::cout << "Initializing output tensor...\n";
 	if(cudaMallocManaged(&out, tensorSize(oShape) * sizeof(float)) != cudaSuccess) {
-		std::cout << "Unable to cudaMallocManaged output tensor.\n" ;
-		return -1;
+		std::cout << "Unable to cudaMalloc output tensor.\n" ;
+		return NULL;
 	}
-	memset(out, 0, tensorSize(oShape));
 
 	// Run Kernel - 1 stream per batch, 1 thread per output element
 	assert(fShape.width <= CONV_FILTER_DIM_MAX && fShape.height <= CONV_FILTER_DIM_MAX);
@@ -775,68 +689,15 @@ int evaluateGpuConv (TensorShape iShape, TensorShape fShape,
 		float* output = &out[count * oShape.channels * oShape.width * oShape.height];
 
 		cudaStreamCreate(&streams[count]);
-		convLayer_gpu<<<gDim, bDim>>>(input, iShape, filter, fShape, bias, output, oShape, args, 1);
+		convLayer_gpu<<<gDim, bDim, 0, streams[count]>>>(input, iShape, filter, fShape, bias, output, oShape, args, 1);
 	}
 	gpuErrchk(cudaPeekAtLastError());
 	gpuErrchk(cudaDeviceSynchronize());
-	auto stop = std::chrono::high_resolution_clock::now();
-	auto durationGPU = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-
-	#ifndef CONV_CHECK_DISABLE
-	printf("Checking GPU results against CPU version.\n");
-	float * inCPU = nullptr;
-	float * filterCPU = nullptr;
-	float * biasCPU = nullptr; 
-	float * outCPU = nullptr;
-
-	inCPU = (float *) malloc (tensorSize(iShape) * sizeof(float));
-	if(cudaMemcpy(inCPU, in, tensorSize(iShape) * sizeof(float), cudaMemcpyDeviceToHost) != cudaSuccess) {
-		printf("Failed to cudaMemcpy for checking.\n");
-		return -1;
-	}
-	filterCPU = (float *) malloc (tensorSize(fShape) * sizeof(float));
-	if(cudaMemcpy(filterCPU, filter, tensorSize(fShape) * sizeof(float), cudaMemcpyDeviceToHost) != cudaSuccess) {
-		printf("Failed to cudaMemcpy for checking.\n");
-		return -1;
-	}
-	biasCPU = (float *) malloc (oShape.channels * sizeof(float));
-	if(cudaMemcpy(biasCPU, bias, oShape.channels * sizeof(float), cudaMemcpyDeviceToHost) != cudaSuccess) {
-		printf("Failed to cudaMemcpy for checking.\n");
-		return -1;
-	}
-
-	std::cout << "OutShape : " << oShape << " \n";
-	outCPU = (float *) malloc (tensorSize(oShape) * sizeof(float));
-
-	start = std::chrono::high_resolution_clock::now();
-	convLayer_cpu(inCPU, iShape, filterCPU, fShape, biasCPU, outCPU, oShape, args, oShape.count);
-	stop = std::chrono::high_resolution_clock::now();
-	auto durationCPU = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-
-	for(uint64_t i = 0; i < tensorSize(oShape); i++) {
-		if(outCPU[i] > out[i] + FP_ERROR || outCPU[i] < out[i] - FP_ERROR){
-			#ifndef DEBUG_PRINT_DISABLE
-			std::cout << "i: " << i << " Got: " << out[i] << " Expected: " << outCPU[i] << "\n";
-			#endif
-			errorCount++;
-		}
-	}
-
-	std::cout << "CPU Execution time was: " << durationCPU.count() << " ms\n";
-
-	free(inCPU);
-	free(filterCPU);
-	free(biasCPU);
-	free(outCPU);
-	#endif
-
-	std::cout << "GPU Execution time was: " << durationGPU.count() << " ms\n";
 
 	cudaFree(in);
-	cudaFree(out);
 	cudaFree(filter);
 	cudaFree(bias);
-	return errorCount;
+	return out;
 }
 
 
@@ -906,195 +767,66 @@ void convLayer_gpu(float * input, TensorShape iShape,
 //*****************************************************************************
 // GEMM
 //*****************************************************************************
-#define GEMM_OPT // Enables the optimized codepath for the GEMM
-//#define GEMM_UNIFIED // Enables the use of unified system memory for GEMM
 #define GEMM_TILE_DIM 1024 // Size of the tiles in elements (32 x 32 x 1) was 19 x 19 x 1
-//#define GEMM_CHECK_DISABLE
 
 
-int runGpuGemm (int arc, char ** argv) {
+void runGpuGemm (TensorObject* out, TensorObject* in, TensorShape weights) {
 	uint32_t tileDim = sqrt(GEMM_TILE_DIM);
-	TensorShape aShape = {1, 1, 6, 4};
-	TensorShape bShape = {1, 1, 4, 8};
+	TensorShape aShape = in->shape;
+	TensorShape bShape = weights;
 	TensorShape oShape;
 	GemmLayerArgs args = {tileDim, tileDim, (aShape.width + tileDim - 1) / tileDim};
 
 	// Output Initialization
-	if (aShape.width != bShape.height || aShape.channels != bShape.channels 
-		|| aShape.count != bShape.count) {
+	if (aShape.width != bShape.height || aShape.channels != bShape.channels || aShape.count != bShape.count) {
 		std::cout << "Dimensions dont match : " << aShape << " x " << bShape << " \n";
-		return -1;
+		return;
 	}
+
 	oShape.height = aShape.height;
 	oShape.width = bShape.width;
 	oShape.channels = aShape.channels;
 	oShape.count = aShape.count;
-
-	int errors = evaluateGpuGemm(aShape, bShape, oShape, args);
-	std::cout << "Found " << errors << " / " << tensorSize(oShape) << " errors \n";
-	return errors;
+	out->shape = oShape;
+	out->tensor = evaluateGpuGemm(in, bShape, oShape, args);
 }
 
 
-int runGpuGemm (uint32_t a, uint32_t b, uint32_t c) {
-	uint32_t tileDim = sqrt(GEMM_TILE_DIM);
-	TensorShape aShape = {1, 1, b, a};
-	TensorShape bShape = {1, 1, a, c};
-	TensorShape oShape;
-	GemmLayerArgs args = {tileDim, tileDim, (aShape.width + tileDim - 1) / tileDim};
-
-	// Output Initialization
-	if (aShape.width != bShape.height || aShape.channels != bShape.channels 
-		|| aShape.count != bShape.count) {
-		std::cout << "Dimensions dont match : " << aShape << " x " << bShape << " \n";
-		return -1;
-	}
-	oShape.height = aShape.height;
-	oShape.width = bShape.width;
-	oShape.channels = aShape.channels;
-	oShape.count = aShape.count;
-
-	int errors = evaluateGpuGemm(aShape, bShape, oShape, args);
-	std::cout << "Found " << errors << " / " << tensorSize(oShape) << " errors \n";
-	return errors;
-}
-
-
-int evaluateGpuGemm (TensorShape aShape, TensorShape bShape, 
+float* evaluateGpuGemm (TensorObject* aObj, TensorShape bShape, 
 		TensorShape oShape, GemmLayerArgs args) {
-
-	// Allocate memory for kernel
+		
+	TensorShape aShape = aObj->shape;
 	float *a, *b, *out;
-	bool printen = false;
 
-	#ifndef DEBUG_PRINT_DISABLE
-	printen = true;
-	#endif
-
-	#ifdef GEMM_UNIFIED
-	if(printen) { std::cout << "Making A tensor...\n"; }
-	a = cudaMakeTensorUnified(aShape);
-
-	if(printen) { std::cout << "Making B tensor...\n"; }
-	b = cudaMakeTensorUnified(bShape);
-
-	if(printen) { std::cout << "Allocating out tensor...\n"; }
-	if(cudaMallocManaged(&out, tensorSize(oShape) * sizeof(float)) != cudaSuccess) {
-		std::cout << "Unable to cudaMallocManaged output tensor.\n" ;
-		return -1;
-	}
-	#else
-	if(printen) { std::cout << "Making A tensor...\n"; }
-	a = cudaMakeTensor(aShape);
-
-	if(printen) { std::cout << "Making B tensor...\n"; }
+	// Init inputs
+	a = aObj->tensor;
 	b = cudaMakeTensor(bShape);
 
-	if(printen) { std::cout << "Allocating out tensor...\n"; }
-	if(cudaMalloc(&out, tensorSize(oShape) * sizeof(float)) != cudaSuccess) {
+	// Allocate output
+	if(cudaMallocManaged(&out, tensorSize(oShape) * sizeof(float)) != cudaSuccess) {
 		std::cout << "Unable to cudaMalloc output tensor.\n" ;
-		return -1;
+		return NULL;
 	}
-	#endif
-	cudaMemset(out, 0, tensorSize(oShape) * sizeof(float));
-	std::cout << "OutShape : " << oShape << " \n";
 
 	// Run Kernel - 1 thread per output element, supports multiple channels and batches
-	if(printen) { std::cout << "Running GPU Kernel..\n"; }
 	dim3 bDim(args.tileW, args.tileH, 1); // Note if tileH/tileW is small effiency will be poor
-	#ifdef GEMM_OPT
 	dim3 gDim(ceil((float) oShape.width / args.tileW), ceil((float) oShape.height / args.tileH), oShape.channels * args.subTileCount);
-	#else
-	dim3 gDim(ceil((float) oShape.width / args.tileW), ceil((float) oShape.height / args.tileH), oShape.channels);
-	#endif
 	cudaStream_t streams[oShape.count];
 	uint32_t tileSize = (bDim.x + 1) * bDim.y * sizeof(float) * 2;
 
-	auto start = std::chrono::high_resolution_clock::now();
 	for(uint64_t count = 0; count < oShape.count; count++) {
 		float* aIn = &a[count * aShape.channels * aShape.width * aShape.height];
 		float* bIn = &b[count * bShape.channels * bShape.width * bShape.height];
 		float* output = &out[count * oShape.channels * oShape.width * oShape.height];
 
 		cudaStreamCreate(&streams[count]);
-		#ifdef GEMM_OPT
-		gemmLayer_gpu<<<gDim, bDim, tileSize>>>(aIn, aShape, bIn, bShape, output, oShape, args, 1);
-		#else
-		gemmLayerSeq_gpu<<<gDim, bDim, tileSize>>>(aIn, aShape, bIn, bShape, output, oShape, args, 1);
-		#endif
+		gemmLayer_gpu<<<gDim, bDim, tileSize, streams[count]>>>(aIn, aShape, bIn, bShape, output, oShape, args, 1);
 	}
 	gpuErrchk(cudaPeekAtLastError());
 	gpuErrchk(cudaDeviceSynchronize());
-	auto stop = std::chrono::high_resolution_clock::now();
-	auto durationGPU = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-	int errorCount = 0;
 
-	#ifndef GEMM_CHECK_DISABLE
-	if(printen) { printf("Checking GPU results against CPU version.\n"); }
-	float* aCPU = nullptr;
-	float* bCPU = nullptr;
-	float* outCPU = nullptr;
-
-	#ifdef GEMM_UNIFIED
-	aCPU = a;
-	bCPU = b;
-	#else
-	aCPU = (float*) malloc(tensorSize(aShape) * sizeof(float));
-	if(cudaMemcpy(aCPU, a, tensorSize(aShape) * sizeof(float), cudaMemcpyDeviceToHost) != cudaSuccess) {
-		printf("Failed to cudaMemcpy a for checking.\n");
-		return -1;
-	}
-	bCPU = (float*) malloc(tensorSize(bShape) * sizeof(float));
-	if(cudaMemcpy(bCPU, b, tensorSize(bShape) * sizeof(float), cudaMemcpyDeviceToHost) != cudaSuccess) {
-		printf("Failed to cudaMemcpy b for checking.\n");
-		return -1;
-	}
-	float* outGPU = (float*) malloc(tensorSize(oShape) * sizeof(float));
-	if(cudaMemcpy(outGPU, out, tensorSize(oShape) * sizeof(float), cudaMemcpyDeviceToHost) != cudaSuccess) {
-		printf("Failed to cudaMemcpy output for checking.\n");
-		return -1;
-	}
-	#endif
-	outCPU = (float *) malloc (tensorSize(oShape) * sizeof(float));
-
-	start = std::chrono::high_resolution_clock::now();
-	gemmLayer_cpu(aCPU, aShape, bCPU, bShape, outCPU, oShape, args, oShape.count);
-	stop = std::chrono::high_resolution_clock::now();
-	auto durationCPU = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-	
-	#ifdef GEMM_UNIFIED
-	for(uint64_t i = 0; i < tensorSize(oShape); i++) {
-		if(outCPU[i] > out[i] + FP_ERROR || outCPU[i] < out[i] - FP_ERROR){
-			if(printen) { std::cout << "i: " << i << " Got: " << out[i] << " Expected: " << outCPU[i] << "\n"; }
-			errorCount++;
-		}
-	}
-	#else
-	for(uint64_t i = 0; i < tensorSize(oShape); i++) {
-		if(outCPU[i] > outGPU[i] + FP_ERROR || outCPU[i] < outGPU[i] - FP_ERROR){
-			if(printen) { std::cout << "i: " << i << " Got: " << outGPU[i] << " Expected: " << outCPU[i] << "\n"; }
-			errorCount++;
-		}
-	}
-	#endif
-
-	std::cout << "CPU Execution time was: " << durationCPU.count() << " ms\n";
-
-	#ifndef GEMM_UNIFIED
-	free(aCPU);
-	free(bCPU);
-	free(outGPU);
-	#endif
-
-	free(outCPU);
-	#endif
-
-	std::cout << "GPU Execution time was: " << durationGPU.count() << " ms\n";
-
-	cudaFree(a);
 	cudaFree(b);
-	cudaFree(out);
-	return errorCount;
+	return out;
 }
 
 
@@ -1140,50 +872,5 @@ void gemmLayer_gpu (float * a, TensorShape aShape, float * b, TensorShape bShape
 		}
 
 		atomicAdd(&o[outChannel * oShape.width * oShape.height + ty * oShape.width + tx], partial);
-	}
-}
-
-
-__global__
-void gemmLayerSeq_gpu (float * a, TensorShape aShape, float * b, TensorShape bShape,
-		float * o, TensorShape oShape,
-		GemmLayerArgs args, uint32_t batchSize) {
-
-	// Thread Variables
-	uint32_t tx = threadIdx.x + blockDim.x * blockIdx.x; // Thread x-index in grid
-	uint32_t ty = threadIdx.y + blockDim.y * blockIdx.y; // Thread y-index in grid
-	uint32_t tz = threadIdx.z + blockDim.z * blockIdx.z; // Thread z-index in grid
-	uint32_t tidxBlk = threadIdx.x + threadIdx.y * blockDim.x; // 1D index of the thread in the block (row-major)
-
-	// Shared Memory Variables
-	extern __shared__ float gemmTiles[]; // Shared memory block
-	float* aTile = gemmTiles;
-	float* bTile = &gemmTiles[blockDim.y * blockDim.x];
-
-	float outSum = 0;
-	for(uint32_t subTile = 0; subTile < args.subTileCount; subTile++) {
-
-		// Load local tiles
-		uint32_t aSize = aShape.channels * aShape.width * aShape.height;
-		uint32_t bSize = bShape.channels * bShape.width * bShape.height;
-		uint32_t tileX = threadIdx.x + subTile * blockDim.x;
-		uint32_t tileY = threadIdx.y + subTile * blockDim.y;
-		uint32_t aIdx = tz * aShape.width * aShape.height + (ty * aShape.width) + tileX;
-		uint32_t bIdx = tz * bShape.width * bShape.height + (tileY * bShape.width) + tx;
-
-		aTile[tidxBlk] = tileX < aShape.width && aIdx < aSize ? a[aIdx] : 0;
-		bTile[tidxBlk] = tileY < bShape.height && bIdx < bSize ? b[bIdx] : 0;
-		__syncthreads();
-
-		// Calculate the partial output
-		for(uint32_t element = 0; element < blockDim.y; element++) {
-			outSum += aTile[threadIdx.y * blockDim.x + element] * bTile[element * blockDim.x + threadIdx.x];
-		}
-		__syncthreads();
-	}
-
-	// Bounds check
-	if(tx < oShape.width && ty < oShape.height) {	
-		o[tz * oShape.width * oShape.height + ty * oShape.width + tx] = outSum;
 	}
 }
