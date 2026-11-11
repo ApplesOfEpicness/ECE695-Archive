@@ -1,0 +1,1 @@
+This repository contains the archived data/projects for Purdue's ECE 69500 - Hardware for Machine Learning. Each assignment lives in its own branch. This repository is for archival purposes only. Any proprietary code or educational material in this archive belongs to the original rights holder.
