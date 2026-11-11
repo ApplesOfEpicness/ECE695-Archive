@@ -625,27 +625,16 @@ void shader_core_stats::print(FILE *fout) const {
   fprintf(fout, "gpgpu_n_tot_thrd_icount = %lld\n", thread_icount_uarch);
   fprintf(fout, "gpgpu_n_tot_w_icount = %lld\n", warp_icount_uarch);
 
-  unsigned long long globalAccs = gpgpu_n_mem_write_global + gpgpu_n_mem_read_global;
   fprintf(fout, "gpgpu_n_stall_shd_mem = %d\n", gpgpu_n_stall_shd_mem);
   fprintf(fout, "gpgpu_n_mem_read_local = %d\n", gpgpu_n_mem_read_local);
   fprintf(fout, "gpgpu_n_mem_write_local = %d\n", gpgpu_n_mem_write_local);
   fprintf(fout, "gpgpu_n_mem_read_global = %d\n", gpgpu_n_mem_read_global);
   fprintf(fout, "gpgpu_n_mem_write_global = %d\n", gpgpu_n_mem_write_global);
-  fprintf(fout, "gpgpu_n_total_mem_global = %d\n", globalAccs);
   fprintf(fout, "gpgpu_n_mem_texture = %d\n", gpgpu_n_mem_texture);
   fprintf(fout, "gpgpu_n_mem_const = %d\n", gpgpu_n_mem_const);
-  fprintf(fout, "gpgpu_n_load_insn = %d\n", gpgpu_n_load_insn);
+
+  fprintf(fout, "gpgpu_n_load_insn  = %d\n", gpgpu_n_load_insn);
   fprintf(fout, "gpgpu_n_store_insn = %d\n", gpgpu_n_store_insn);
-  fprintf(fout, "gpgpu_n_local_load_insn = %d\n", gpgpu_n_local_load_insn);
-  fprintf(fout, "gpgpu_n_local_store_insn = %d\n", gpgpu_n_local_store_insn);
-  //fprintf(fout, "gpgpu_n_global_load_insn = %d\n", gpgpu_n_global_load_insn);
-  //fprintf(fout, "gpgpu_n_global_store_insn = %d\n", gpgpu_n_global_store_insn);
-  fprintf(fout, "gpgpu_n_global_ops = %d\n", gpgpu_n_global_ops);
-  fprintf(fout, "Memory Divergence (Global) = %f accesses per instruction\n", (double) globalAccs / gpgpu_n_global_ops);
-  fprintf(fout, "Memory Divergence (L1D) = %f accesses per instruction\n", (double) statsPacket.l1Accs / gpgpu_n_global_ops);
-  fprintf(fout, "Source Memory Accesses = %d\n", statsPacket.globalAccs);
-  fprintf(fout, "Source Memory Insts = %d\n", statsPacket.globalCalls);
-  fprintf(fout, "Source Memory Divergence = %f accesses per instruction\n", (double) statsPacket.globalAccs / statsPacket.globalCalls);
   fprintf(fout, "gpgpu_n_shmem_insn = %d\n", gpgpu_n_shmem_insn);
   fprintf(fout, "gpgpu_n_sstarr_insn = %d\n", gpgpu_n_sstarr_insn);
   fprintf(fout, "gpgpu_n_tex_insn = %d\n", gpgpu_n_tex_insn);
@@ -737,13 +726,8 @@ void shader_core_stats::print(FILE *fout) const {
   fprintf(fout, "Stall:%d\t", shader_cycle_distro[2]);
   fprintf(fout, "W0_Idle:%d\t", shader_cycle_distro[0]);
   fprintf(fout, "W0_Scoreboard:%d", shader_cycle_distro[1]);
-  float warpCnt = 0;
-  float threadCnt = 0;
-  for (unsigned i = 3; i < m_config->warp_size + 3; i++) {
+  for (unsigned i = 3; i < m_config->warp_size + 3; i++)
     fprintf(fout, "\tW%d:%d", i - 2, shader_cycle_distro[i]);
-    threadCnt += (i - 2) * shader_cycle_distro[i];
-    warpCnt += shader_cycle_distro[i];
-  }
   fprintf(fout, "\n");
   fprintf(fout, "single_issue_nums: ");
   for (unsigned i = 0; i < m_config->gpgpu_num_sched_per_core; i++)
@@ -753,11 +737,6 @@ void shader_core_stats::print(FILE *fout) const {
   for (unsigned i = 0; i < m_config->gpgpu_num_sched_per_core; i++)
     fprintf(fout, "WS%d:%d\t", i, dual_issue_nums[i]);
   fprintf(fout, "\n");
-  uint32_t warpSize = 32;
-  float activeEff = 100 * threadCnt / (warpCnt * warpSize);
-  float totalEff = 100 * threadCnt / ((warpCnt + shader_cycle_distro[0] + shader_cycle_distro[1])* warpSize);
-  fprintf(fout, "Active SIMD Efficiency %: %f\n", activeEff);
-  fprintf(fout, "Overall SIMD Efficiency %: %f\n", totalEff);
 
   m_outgoing_traffic_stats->print(fout);
   m_incoming_traffic_stats->print(fout);
@@ -1214,8 +1193,11 @@ void scheduler_unit::order_by_priority(
 
 void scheduler_unit::cycle() {
   SCHED_DPRINTF("scheduler_unit::cycle()\n");
-  bool valid_inst = false;  // there was one warp with a valid instruction to issue (didn't require flush due to control hazard)
-  bool ready_inst = false;   // of the valid instructions, there was one not waiting for pending register writes
+  bool valid_inst =
+      false;  // there was one warp with a valid instruction to issue (didn't
+              // require flush due to control hazard)
+  bool ready_inst = false;   // of the valid instructions, there was one not
+                             // waiting for pending register writes
   bool issued_inst = false;  // of these we issued one
 
   order_warps();
@@ -1510,11 +1492,12 @@ void scheduler_unit::cycle() {
 
   // issue stall statistics:
   if (!valid_inst)
-    m_stats->shader_cycle_distro[0]++;  // idle or control hazard (idle)
+    m_stats->shader_cycle_distro[0]++;  // idle or control hazard
   else if (!ready_inst)
-    m_stats->shader_cycle_distro[1]++;  // waiting for RAW hazards (possibly due to memory) (scoreboard)
+    m_stats->shader_cycle_distro[1]++;  // waiting for RAW hazards (possibly due
+                                        // to memory)
   else if (!issued_inst)
-    m_stats->shader_cycle_distro[2]++;  // pipeline stalled (stall)
+    m_stats->shader_cycle_distro[2]++;  // pipeline stalled
 }
 
 void scheduler_unit::do_on_warp_issued(
@@ -2972,7 +2955,6 @@ void gpgpu_sim::shader_print_cache_stats(FILE *fout) const {
 
       total_css += css;
     }
-    statsPacket.l1Accs = total_css.accesses;
     fprintf(fout, "\tL1D_total_cache_accesses = %llu\n", total_css.accesses);
     fprintf(fout, "\tL1D_total_cache_misses = %llu\n", total_css.misses);
     if (total_css.accesses > 0) {
@@ -4320,7 +4302,7 @@ simt_core_cluster::simt_core_cluster(class gpgpu_sim *gpu, unsigned cluster_id,
   m_mem_config = mem_config;
 }
 
-void simt_core_cluster::core_cycle(){
+void simt_core_cluster::core_cycle() {
   for (std::list<unsigned>::iterator it = m_core_sim_order.begin();
        it != m_core_sim_order.end(); ++it) {
     m_core[*it]->cycle();
@@ -4381,9 +4363,9 @@ unsigned simt_core_cluster::get_n_active_sms() const {
 
 unsigned simt_core_cluster::issue_block2core() {
   unsigned num_blocks_issued = 0;
+
   for (unsigned i = 0; i < m_config->n_simt_cores_per_cluster; i++) {
-    unsigned core =
-        (i + m_cta_issue_next_core + 1) % m_config->n_simt_cores_per_cluster;
+    unsigned core = (i + m_cta_issue_next_core + 1) % m_config->n_simt_cores_per_cluster;
 
     kernel_info_t *kernel;
     // Jin: fetch kernel according to concurrent kernel setting
@@ -4392,29 +4374,30 @@ unsigned simt_core_cluster::issue_block2core() {
       kernel_info_t *k = m_gpu->select_kernel();
       kernel = k;
     } else {
-      // first select core kernel, if no more cta, get a new kernel
-      // only when core completes
+      // first select core kernel, if no more cta, get a new kernel only when core completes
       kernel = m_core[core]->get_kernel();
       if (!m_gpu->kernel_more_cta_left(kernel)) {
         // wait till current kernel finishes
         if (m_core[core]->get_not_completed() == 0) {
           kernel_info_t *k = m_gpu->select_kernel();
-          if (k) m_core[core]->set_kernel(k);
+          if(k) {
+            m_core[core]->set_kernel(k);
+          }
           kernel = k;
         }
       }
     }
 
-    if (m_gpu->kernel_more_cta_left(kernel) &&
-        //            (m_core[core]->get_n_active_cta() <
-        //            m_config->max_cta(*kernel)) ) {
-        m_core[core]->can_issue_1block(*kernel)) {
+    /* An SM/core is assumed to by fully occupied (greedy) if it cannot be issued another block, or there are no more thread blocks (CTA's) in this kernel 
+    (because we are forced to wait until the previous kernel finishes to issue again when gpgpu_concurrent_kernel_sm is false). */
+    if (m_gpu->kernel_more_cta_left(kernel) && m_core[core]->can_issue_1block(*kernel)) {
       m_core[core]->issue_block2core(*kernel);
       num_blocks_issued++;
-      m_cta_issue_next_core = core;
+      m_cta_issue_next_core = algoCTA == greedy_cta ? m_cta_issue_next_core : core; // Greedy causes the selected SM to remain the same until it is full (which causes for loop to select next SM in cluster)
       break;
     }
   }
+
   return num_blocks_issued;
 }
 

@@ -97,7 +97,6 @@ tr1_hash_map<new_addr_type, unsigned> address_random_interleaving;
 
 #include "mem_latency_stat.h"
 
-
 void power_config::reg_options(class OptionParser *opp) {
   option_parser_register(opp, "-accelwattch_xml_file", OPT_CSTR,
                          &g_power_config_name, "AccelWattch XML file",
@@ -981,8 +980,7 @@ gpgpu_sim::gpgpu_sim(const gpgpu_sim_config &config, gpgpu_context *ctx)
 
   m_running_kernels.resize(config.max_concurrent_kernel, NULL);
   m_last_issued_kernel = 0;
-  m_last_cluster_issue = m_shader_config->n_simt_clusters -
-                         1;  // this causes first launch to use simt cluster 0
+  m_last_cluster_issue = m_shader_config->n_simt_clusters - 1;  // this causes first launch to use simt cluster 0
   *average_pipeline_duty_cycle = 0;
   *active_sms = 0;
 
@@ -1416,7 +1414,6 @@ void gpgpu_sim::gpu_print_stat() {
          (unsigned)((gpu_tot_sim_insn + gpu_sim_insn) / elapsed_time));
 
   // shader_print_l1_miss_stat( stdout );
-  StatsPacket data;
   shader_print_cache_stats(stdout);
 
   cache_stats core_cache_stats;
@@ -1432,7 +1429,6 @@ void gpgpu_sim::gpu_print_stat() {
   shader_print_scheduler_stat(stdout, false);
 
   m_shader_stats->print(stdout);
-  
 #ifdef GPGPUSIM_POWER_MODEL
   if (m_config.g_power_simulation_enabled) {
     if(m_config.g_power_simulation_mode > 0){
@@ -1567,26 +1563,11 @@ void shader_core_ctx::mem_instruction_stats(const warp_inst_t &inst) {
       m_stats->gpgpu_n_tex_insn += active_count;
       break;
     case global_space:
-      if(active_count > 0)
-        m_stats->gpgpu_n_global_ops++;
-      if (inst.is_store()) {
-        //m_stats->gpgpu_n_global_store_op++;
-        m_stats->gpgpu_n_store_insn += active_count;
-      }
-      else {
-        //m_stats->gpgpu_n_global_load_op++;
-        m_stats->gpgpu_n_load_insn += active_count;
-      }
-      break;
     case local_space:
-      if (inst.is_store()) {
-        m_stats->gpgpu_n_local_store_insn += active_count;
+      if (inst.is_store())
         m_stats->gpgpu_n_store_insn += active_count;
-      }
-      else {
-        m_stats->gpgpu_n_local_load_insn += active_count;
+      else
         m_stats->gpgpu_n_load_insn += active_count;
-      }
       break;
     default:
       abort();
@@ -1598,7 +1579,8 @@ bool shader_core_ctx::can_issue_1block(kernel_info_t &kernel) {
     if (m_config->max_cta(kernel) < 1) return false;
 
     return occupy_shader_resource_1block(kernel, false);
-  } else {
+  } 
+  else {
     return (get_n_active_cta() < m_config->max_cta(kernel));
   }
 }
@@ -1702,7 +1684,7 @@ void shader_core_ctx::release_shader_resource_1block(unsigned hw_ctaid,
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Launches a cooperative thread array (CTA).
+ * Launches a cooperative thread array (CTA). (CTA ~ Thread block)
  *
  * @param kernel
  *    object that tells us which kernel to ask for a CTA from
@@ -1725,7 +1707,7 @@ void shader_core_ctx::issue_block2core(kernel_info_t &kernel) {
   kernel.inc_running();
 
   // find a free CTA context
-  unsigned free_cta_hw_id = (unsigned)-1;
+  unsigned free_cta_hw_id = (unsigned) -1;
 
   unsigned max_cta_per_core;
   if (!m_config->gpgpu_concurrent_kernel_sm)
@@ -1738,7 +1720,7 @@ void shader_core_ctx::issue_block2core(kernel_info_t &kernel) {
       break;
     }
   }
-  assert(free_cta_hw_id != (unsigned)-1);
+  assert(free_cta_hw_id != (unsigned) -1);
 
   // determine hardware threads and warps that will be used for this CTA
   int cta_size = kernel.threads_per_cta();
@@ -1748,15 +1730,15 @@ void shader_core_ctx::issue_block2core(kernel_info_t &kernel) {
   // thread ids
   int padded_cta_size = cta_size;
   if (cta_size % m_config->warp_size)
-    padded_cta_size =
-        ((cta_size / m_config->warp_size) + 1) * (m_config->warp_size);
+    padded_cta_size = ((cta_size / m_config->warp_size) + 1) * (m_config->warp_size);
 
   unsigned int start_thread, end_thread;
 
   if (!m_config->gpgpu_concurrent_kernel_sm) {
     start_thread = free_cta_hw_id * padded_cta_size;
     end_thread = start_thread + cta_size;
-  } else {
+  } 
+  else {
     start_thread = find_available_hwtid(padded_cta_size, true);
     assert((int)start_thread != -1);
     end_thread = start_thread + cta_size;
@@ -1801,10 +1783,7 @@ void shader_core_ctx::issue_block2core(kernel_info_t &kernel) {
     //
     warps.set(warp_id);
   }
-  assert(nthreads_in_block > 0 &&
-         nthreads_in_block <=
-             m_config->n_thread_per_shader);  // should be at least one, but
-                                              // less than max
+  assert(nthreads_in_block > 0 && nthreads_in_block <= m_config->n_thread_per_shader);  // should be at least one, but less than max
   m_cta_status[free_cta_hw_id] = nthreads_in_block;
 
   if (m_gpu->resume_option == 1 && kernel.get_uid() == m_gpu->resume_kernel &&
@@ -1865,14 +1844,49 @@ int gpgpu_sim::next_clock_domain(void) {
   return mask;
 }
 
+SchedAlgo algoCTA = flat_cta; // Sets the current CTA scheduling algo. (global)
+unsigned coreCounter = 0; // Keeps track of how many time we have called issue_block2core for a cluster (which is assumed to be 1 per core)
+bool firstIssue = true; // Keeps track of when the first block gets issued to an SM
+
 void gpgpu_sim::issue_block2core() {
-  unsigned last_issued = m_last_cluster_issue;
-  for (unsigned i = 0; i < m_shader_config->n_simt_clusters; i++) {
-    unsigned idx = (i + last_issued + 1) % m_shader_config->n_simt_clusters;
-    unsigned num = m_cluster[idx]->issue_block2core();
-    if (num) {
-      m_last_cluster_issue = idx;
+  switch(algoCTA) {
+    case greedy_cta: { // Issue to one cluster until all of its cores are full
+      unsigned idx = (m_last_cluster_issue + 1) % m_shader_config->n_simt_clusters;
+
+      unsigned num = m_cluster[idx]->issue_block2core();
       m_total_cta_launched += num;
+
+      if(num == 0 && !firstIssue) { // Cluster couldn't issue any more, switch to the next cluster
+        m_last_cluster_issue = idx;
+        m_total_cta_launched += m_cluster[(idx + 1) % m_shader_config->n_simt_clusters]->issue_block2core();
+      }
+      else if(num != 0) {
+        firstIssue = false;
+      }
+      break;
+    }
+    case flat_cta: { // Issue one block for each core in the cluster before switching clusters (Round-robin between all cores)
+      unsigned idx = (m_last_cluster_issue + 1) % m_shader_config->n_simt_clusters;
+      unsigned num = m_cluster[idx]->issue_block2core();
+      m_total_cta_launched += num;
+      coreCounter += num; // Assumed/checked that it is impossible for num to be > 1
+
+      if(coreCounter >= m_shader_config->n_simt_cores_per_cluster) { // Attempted to issue to every core in cluster once, switch clusters
+        m_last_cluster_issue = idx;
+        coreCounter = 0;
+      }
+      break;
+    }
+    default: {
+      unsigned last_issued = m_last_cluster_issue;
+      for (unsigned i = 0; i < m_shader_config->n_simt_clusters; i++) {
+        unsigned idx = (i + last_issued + 1) % m_shader_config->n_simt_clusters;
+        unsigned num = m_cluster[idx]->issue_block2core();
+        if (num) {
+          m_last_cluster_issue = idx;
+          m_total_cta_launched += num;
+        }
+      }
     }
   }
 }

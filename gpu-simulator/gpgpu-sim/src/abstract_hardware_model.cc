@@ -43,8 +43,6 @@
 #include "gpgpusim_entrypoint.h"
 #include "option_parser.h"
 
-StatsPacket statsPacket;
-
 void mem_access_t::init(gpgpu_context *ctx) {
   gpgpu_ctx = ctx;
   m_uid = ++(gpgpu_ctx->sm_next_access_uid);
@@ -468,9 +466,8 @@ void warp_inst_t::generate_mem_accesses() {
   }
 
   if (space.get_type() == global_space) {
-    m_config->gpgpu_ctx->stats->ptx_file_line_stats_add_uncoalesced_gmem(pc, m_accessq.size() - starting_queue_size);
-    statsPacket.globalCalls++;
-    statsPacket.globalAccs += m_accessq.size() - starting_queue_size;
+    m_config->gpgpu_ctx->stats->ptx_file_line_stats_add_uncoalesced_gmem(
+        pc, m_accessq.size() - starting_queue_size);
   }
   m_mem_accesses_created = true;
 }

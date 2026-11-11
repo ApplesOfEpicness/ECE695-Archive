@@ -133,7 +133,7 @@ IPOLY:
     extra_params: "-memory_partition_indexing 2"
 
 VISUAL:
-    extra_params: "-visualizer_enabled 0"
+    extra_params: "-visualizer_enabled 1"
 
 RR:
     extra_params: "-gpgpu_scheduler lrr"
@@ -185,3 +185,6 @@ Accelwattch_PTX_SIM:
     extra_params: "-power_simulation_enabled 1
     \n-power_simulation_mode 0
     \n-accelwattch_xml_file accelwattch_ptx_sim.xml"
+
+8CLUSTER:
+    extra_params: "-gpgpu_n_cores_per_cluster 8"

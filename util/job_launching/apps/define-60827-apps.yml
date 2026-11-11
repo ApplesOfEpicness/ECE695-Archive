@@ -78,3 +78,22 @@ ece695.part2:
         - srad_v1-rodinia-3.1:
             - args:  100 0.5 502 458
               accel-sim-mem: 1G
+
+ece695.part2reduced:
+    exec_dir: "$GPUAPPS_ROOT/bin/$CUDA_VERSION/release/"
+    data_dirs: "$GPUAPPS_ROOT/data_dirs/cuda/rodinia/3.1/"
+    execs:
+        - lud-rodinia-3.1:
+            - args:  -s 256 -v
+              accel-sim-mem: 1G
+        - nn-rodinia-3.1:
+            - args:  ./data/filelist_4 -r 5 -lat 30 -lng 90
+              accel-sim-mem: 4G
+
+ece695.nn:
+    exec_dir: "$GPUAPPS_ROOT/bin/$CUDA_VERSION/release/"
+    data_dirs: "$GPUAPPS_ROOT/data_dirs/cuda/rodinia/3.1/"
+    execs:
+        - nn-rodinia-3.1:
+            - args:  ./data/filelist_4 -r 5 -lat 30 -lng 90
+              accel-sim-mem: 4G

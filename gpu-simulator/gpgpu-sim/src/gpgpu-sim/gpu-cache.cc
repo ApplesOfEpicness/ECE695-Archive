@@ -1757,9 +1757,12 @@ enum cache_request_status data_cache::access(new_addr_type addr, mem_fetch *mf,
   unsigned cache_index = (unsigned)-1;
   enum cache_request_status probe_status =
       m_tag_array->probe(block_addr, cache_index, mf, mf->is_write(), true);
-  enum cache_request_status access_status = process_tag_probe(wr, probe_status, addr, cache_index, mf, time, events);
-  m_stats.inc_stats(mf->get_access_type(), m_stats.select_stats_status(probe_status, access_status));
-  m_stats.inc_stats_pw(mf->get_access_type(), m_stats.select_stats_status(probe_status, access_status));
+  enum cache_request_status access_status =
+      process_tag_probe(wr, probe_status, addr, cache_index, mf, time, events);
+  m_stats.inc_stats(mf->get_access_type(),
+                    m_stats.select_stats_status(probe_status, access_status));
+  m_stats.inc_stats_pw(mf->get_access_type(), m_stats.select_stats_status(
+                                                  probe_status, access_status));
   return access_status;
 }
 

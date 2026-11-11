@@ -12,11 +12,8 @@ collect_aggregate:
     - 'gpgpu_simulation_time\s*=.*\(([0-9]+) sec\).*'
     - 'gpu_tot_sim_cycle\s*=\s*(.*)'
     - 'gpu_tot_ipc\s*=\s*(.*)'
-    - 'Memory Divergence \(Global\)\s*=\s*([0-9.]+)'
-    - 'Memory Divergence \(L1D\)\s*=\s*([0-9.]+)'
-    - 'Source Memory Divergence\s*=\s*([0-9.]+)'
-    - 'Active SIMD Efficiency %:\s*(.*)'
-    - 'Overall SIMD Efficiency %:\s*(.*)'
+    - 'L2_total_cache_misses\s*=\s*(.*)'
+    - 'L1D_total_cache_misses\s*=\s*(.*)'
     #- '\s+L2_cache_stats_breakdown\[GLOBAL_ACC_R\]\[HIT\]\s*=\s*(.*)'
     #- '\s+L2_cache_stats_breakdown\[GLOBAL_ACC_R\]\[TOTAL_ACCESS\]\s*=\s*(.*)'
     #- '\s+L2_cache_stats_breakdown\[GLOBAL_ACC_W\]\[HIT\]\s*=\s*(.*)'
@@ -26,11 +23,10 @@ collect_aggregate:
     #- '\s+Total_core_cache_stats_breakdown\[GLOBAL_ACC_W\]\[HIT\]\s*=\s*(.*)'
     #- '\s+Total_core_cache_stats_breakdown\[GLOBAL_ACC_W\]\[TOTAL_ACCESS\]\s*=\s*(.*)'
     #- '\s+Total_core_cache_stats_breakdown\[GLOBAL_ACC_R\]\[MSHR_HIT\]\s*=\s*(.*)'
-    #- 'gpgpu_n_tot_w_icount\s*=\s*(.*)'
-    #- 'total dram reads\s*=\s*(.*)'
-    #- 'total dram writes\s*=\s*(.*)'
-    #- 'kernel_launch_uid\s*=\s*(.*)'
-
+    - 'gpgpu_n_tot_w_icount\s*=\s*(.*)'
+    - 'total dram reads\s*=\s*(.*)'
+    - 'total dram writes\s*=\s*(.*)'
+    - 'kernel_launch_uid\s*=\s*(.*)'
 
 
 # These stats are reset each kernel and should not be diff'd
@@ -46,3 +42,4 @@ collect_rates:
     - 'gpgpu_simulation_rate\s+=\s+(.*)\s+\(inst\/sec\)'
     - 'gpgpu_simulation_rate\s+=\s+(.*)\s+\(cycle\/sec\)'
     - 'gpgpu_silicon_slowdown\s*=\s*(.*)x'
+    - 'gpu_tot_ipc\s*=\s*(.*)'

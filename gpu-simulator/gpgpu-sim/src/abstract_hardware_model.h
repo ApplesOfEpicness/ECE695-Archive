@@ -44,14 +44,6 @@ class gpgpu_context;
 #define MAX_INPUT_VALUES 24
 #define MAX_OUTPUT_VALUES 8
 
-typedef struct {
-  unsigned long long l1Accs = 0;
-  unsigned long long globalAccs = 0;
-  unsigned long long globalCalls = 0;
-} StatsPacket;
-
-extern StatsPacket statsPacket;
-
 enum _memory_space_t {
   undefined_space = 0,
   reg_space,

@@ -71,6 +71,9 @@ extern tr1_hash_map<new_addr_type, unsigned> address_random_interleaving;
 
 enum dram_ctrl_t { DRAM_FIFO = 0, DRAM_FRFCFS = 1 };
 
+enum SchedAlgo {default_cta, flat_cta, greedy_cta};
+extern SchedAlgo algoCTA;
+
 enum hw_perf_t {
   HW_BENCH_NAME=0,
   HW_KERNEL_NAME,

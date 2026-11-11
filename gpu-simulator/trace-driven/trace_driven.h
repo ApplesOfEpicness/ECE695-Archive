@@ -1,31 +1,4 @@
-// Copyright (c) 2018-2021, Mahmoud Khairy, Vijay Kandiah, Timothy Rogers, Tor M. Aamodt, Nikos Hardavellas
-// Northwestern University, Purdue University, The University of British Columbia
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this
-//    list of conditions and the following disclaimer;
-// 2. Redistributions in binary form must reproduce the above copyright notice,
-//    this list of conditions and the following disclaimer in the documentation
-//    and/or other materials provided with the distribution;
-// 3. Neither the names of Northwestern University, Purdue University,
-//    The University of British Columbia nor the names of their contributors
-//    may be used to endorse or promote products derived from this software
-//    without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
+// developed by Mahmoud Khairy, Purdue Univ
 
 #include <assert.h>
 #include <stdio.h>
@@ -40,7 +13,7 @@
 #include "gpgpu-sim/shader.h"
 
 class trace_function_info : public function_info {
- public:
+public:
   trace_function_info(const struct gpgpu_ptx_sim_info &info,
                       gpgpu_context *m_gpgpu_context)
       : function_info(0, m_gpgpu_context) {
@@ -59,7 +32,7 @@ class trace_function_info : public function_info {
 };
 
 class trace_warp_inst_t : public warp_inst_t {
- public:
+public:
   trace_warp_inst_t() {
     m_opcode = 0;
     should_do_atomic = false;
@@ -76,12 +49,12 @@ class trace_warp_inst_t : public warp_inst_t {
       const class trace_config *tconfig,
       const class kernel_trace_t *kernel_trace_info);
 
- private:
+private:
   unsigned m_opcode;
 };
 
 class trace_kernel_info_t : public kernel_info_t {
- public:
+public:
   trace_kernel_info_t(dim3 gridDim, dim3 blockDim,
                       trace_function_info *m_function_info,
                       trace_parser *parser, class trace_config *config,
@@ -90,28 +63,17 @@ class trace_kernel_info_t : public kernel_info_t {
   void get_next_threadblock_traces(
       std::vector<std::vector<inst_trace_t> *> threadblock_traces);
 
-  unsigned long get_cuda_stream_id() {
-    return m_kernel_trace_info->cuda_stream_id;
-  }
-
-  kernel_trace_t *get_trace_info() { return m_kernel_trace_info; }
-
-  bool was_launched() { return m_was_launched; }
-
-  void set_launched() { m_was_launched = true; }
-
- private:
+private:
   trace_config *m_tconfig;
   const std::unordered_map<std::string, OpcodeChar> *OpcodeMap;
   trace_parser *m_parser;
   kernel_trace_t *m_kernel_trace_info;
-  bool m_was_launched;
 
   friend class trace_shd_warp_t;
 };
 
 class trace_config {
- public:
+public:
   trace_config();
 
   void set_latency(unsigned category, unsigned &latency,
@@ -120,7 +82,7 @@ class trace_config {
   void reg_options(option_parser_t opp);
   char *get_traces_filename() { return g_traces_filename; }
 
- private:
+private:
   unsigned int_latency, fp_latency, dp_latency, sfu_latency, tensor_latency;
   unsigned int_init, fp_init, dp_init, sfu_init, tensor_init;
   unsigned specialized_unit_latency[SPECIALIZED_UNIT_NUM];
@@ -136,7 +98,7 @@ class trace_config {
 };
 
 class trace_shd_warp_t : public shd_warp_t {
- public:
+public:
   trace_shd_warp_t(class shader_core_ctx *shader, unsigned warp_size)
       : shd_warp_t(shader, warp_size) {
     trace_pc = 0;
@@ -149,18 +111,17 @@ class trace_shd_warp_t : public shd_warp_t {
   bool trace_done();
   address_type get_start_trace_pc();
   virtual address_type get_pc();
-  virtual kernel_info_t *get_kernel_info() const { return m_kernel_info; }
   void set_kernel(trace_kernel_info_t *kernel_info) {
     m_kernel_info = kernel_info;
   }
 
- private:
+private:
   unsigned trace_pc;
   trace_kernel_info_t *m_kernel_info;
 };
 
 class trace_gpgpu_sim : public gpgpu_sim {
- public:
+public:
   trace_gpgpu_sim(const gpgpu_sim_config &config, gpgpu_context *ctx)
       : gpgpu_sim(config, ctx) {
     createSIMTCluster();
@@ -170,7 +131,7 @@ class trace_gpgpu_sim : public gpgpu_sim {
 };
 
 class trace_simt_core_cluster : public simt_core_cluster {
- public:
+public:
   trace_simt_core_cluster(class gpgpu_sim *gpu, unsigned cluster_id,
                           const shader_core_config *config,
                           const memory_config *mem_config,
@@ -184,7 +145,7 @@ class trace_simt_core_cluster : public simt_core_cluster {
 };
 
 class trace_shader_core_ctx : public shader_core_ctx {
- public:
+public:
   trace_shader_core_ctx(class gpgpu_sim *gpu, class simt_core_cluster *cluster,
                         unsigned shader_id, unsigned tpc_id,
                         const shader_core_config *config,
@@ -221,11 +182,9 @@ class trace_shader_core_ctx : public shader_core_ctx {
                           const active_mask_t &active_mask, unsigned warp_id,
                           unsigned sch_id);
 
- private:
+private:
   void init_traces(unsigned start_warp, unsigned end_warp,
                    kernel_info_t &kernel);
 };
-
-types_of_operands get_oprnd_type(op_type op, special_ops sp_op);
 
 #endif

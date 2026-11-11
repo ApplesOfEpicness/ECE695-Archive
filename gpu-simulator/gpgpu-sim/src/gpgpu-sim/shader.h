@@ -1727,11 +1727,8 @@ struct shader_core_stats_pod {
   double *m_active_exu_threads; //For power model
   double *m_active_exu_warps; //For power model
   unsigned *m_n_diverge;  // number of divergence occurring in this shader
-  unsigned gpgpu_n_load_insn; // local & global ~ these inst numbers are counted PER active thread
-  unsigned gpgpu_n_store_insn; // local * global
-  unsigned gpgpu_n_global_ops; // Number of global issued memory operations
-  unsigned gpgpu_n_local_load_insn;
-  unsigned gpgpu_n_local_store_insn;
+  unsigned gpgpu_n_load_insn;
+  unsigned gpgpu_n_store_insn;
   unsigned gpgpu_n_shmem_insn;
   unsigned gpgpu_n_sstarr_insn;
   unsigned gpgpu_n_tex_insn;
