@@ -1,310 +1,320 @@
-# ECE 695 CUDA Programming Part 1
+[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-c66648af7eb3fe8bc4f294546bfd86ef473780cde1dea487d3c4ff354943c9ae.svg)](https://classroom.github.com/online_ide?assignment_repo_id=9990681&assignment_repo_type=AssignmentRepo)
+# ECE 60827 CUDA Programming Part 2
 
-## Professor: Tim Rogers <br> TA: Christin Bose
+## Professor Tim Rogers <br> TA: Christin Bose
 
-## Due on Saturday, January 28 at 11:59 PM ET (1/29 at 04:59 UTC)
-## Introduction
-
-The purpose of this lab is to familiarize yourself with CUDA programming and the fundamental methodology for parallelizing a traditional CPU-based algorithm for GPU acceleration.  
-
-The official [CUDA Documentation](https://docs.nvidia.com/cuda/) is the best resource for  implementation details and API specifics. You will find yourself referring back to various sections of this page over the next few weeks as we delve deeper into the CUDA API and the architecture of a GP-GPU. 
-
------------------------------------------------------------
-<br>
-
-## PART A: Single-precision A · X Plus Y (SAXPY)
-
-SAXPY stands for `Single-Precision A·X Plus Y`.  It is a function in the standard [Basic Linear Algebra Subroutines (BLAS)](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) library. SAXPY is a combination of scalar multiplication and vector addition, and it’s very simple: it takes as input two vectors of 32-bit floats X and Y with N elements each, and a scalar value A. It multiplies each element `X[i]` by `A` (Scale) and adds the result to `Y[i]`.
+## Due on February 26, 2023
+# Introduction
 
 
-### CPU Implementation
+The first assignment exploited data parallelism along a single dimension - with a direct one-to-one or one-to-many correlation between each thread and the data it processes.
+In the second assignment we will be operating on 2-D data and look at ways to adapt some common operations for the GPU.
 
-An simple CPU-based implementation for `saxpy` can be found in `saxpy_cpu.c` in your Lab1 starter code. The saxpy routines iterates through scales the elements of the vector `x` by `scale` and accumulates the value into the vector `y`. Thus, the original values of `y` prior to saxpy are overwritten. It might help to backup the original vector `y` to make verifying your own application easier.
+The official [CUDA Documentation](https://docs.nvidia.com/cuda/) is the best resource for  implementation details and API specifics. The [NVIDIA Developer Blog](https://developer.nvidia.com/blog) has a number of guides which showcase the latest and best CUDA programming practices.
 
+> We would strongly recommend reading through the CUDA related links within this document before you start writing code.
 
-```C++
-void saxpy_cpu(float* x, float* y, float scale, size_t size) {
-    for (int idx = 0; idx < size; ++idx) {
-        y[idx] = scale * x[idx] + y[idx];
-    }
-}
-```
-### GPU Implementation
+This lab is a significant departure from the previous lab. There are a number of unique ways to parallelize each task and each choice comes with its own set of tradeoffs. There is a significant set of possible implementations and _we cannot wait to see your `ingeneous` and `unique` take on the problems._
 
-SAXPY is an [embarrassing parallel](https://en.wikipedia.org/wiki/Embarrassingly_parallel) workload where the computation of each element in the vector is completely independent of all other elements. To parallelize SAXPY for the GPU, we will use the x dimension (recall thread organization from the lectures) such that each thread will (execute the saxpy computation to) generate a single member of the output vector. 
-
-The host portion of the saxpy code can be written inside `runGpuSaxpy()` inside `cudaLib.cu`. The device code must be written inside the kernel `saxpy_gpu()`. Some hints about the required functions prototypes are present in the starter code. 
-
-**Follow the function interfaces strictly to ensure you code is compatible with the grader application and can be graded without a hitch.**
-
-**NOTE**: The GPU kernels WILL be tested using a wide variety of inputs both in terms of actual values and the dimensions of the vectors. Make sure you test your code thoroughly with a diverse set of inputs before turning it in.
-
-### Required Background
-
-A understanding of the following functions will be crucial to proper execution of this portion of the assignment.
-
-```C++
-cudaMalloc();
-cudaMemcpy();
-cudaFree();
-```
-Furthermore, the elements of each vector can be generated using the `rand()` function. However, you might find it easier to test/debug your code with a simpler pattern of your choice.
-
-### Expected Behavior
-
-The following behavior is expected from  `int runGpuSaxpy(int vectorSize)` 
-
-- generate two random floating point vectors `x` and `y` of `vectorSize` each
-- use a GPU kernel to perform `Y += aX` 
-    - a is a random floating point scaling factor
-- verify the kernel using CPU code
-    - you may use the functions already provided in `cpuLib` library
-
-
+> To boldly go where no one has gone before!
+>
+> -- <cite>Captain James T. Kirk, USS Enterprise</cite>
 
 -----------------------------------------------------------
 <br>
 
-## PART B: Monte Carlo estimation of the value of _&pi;_
+# PART A: Filtering Noise from Images
+## Median Filtering
 
-Monte Carlo methods are a broad class of computational algorithms that rely on repeated random sampling to obtain numerical results. [[1]](#1)
-Among a wide variety of applications, this method can be utilized to estimate the value of _&pi;_ as described below.
+The [median filter](https://en.wikipedia.org/wiki/Median_filter) is a non-linear digital filtering technique, often used to remove noise from an image or signal [[1]](#1). For small to moderate levels of Gaussian noise, the median filter is demonstrably better than Gaussian blur at removing noise whilst preserving edges for a given, fixed window size. [[2]](#2).
+
+While a number of efficient implementations of median filtering exists [[3]](#3), we will be using the relatively compute-intensive "simple" implementation, that precisely computes the median. Furthermore, to simplify the implementation, we will be using a cental symmetric rectangular / square window such that the pixel at the centre will be replaced by the median of all the pixels in
+
+A simple description of the algorithm can be found [here](http://fourier.eng.hmc.edu/e161/lectures/smooth_sharpen/node2.html). The curious, interested in exploring Median Filtering in the context of recent (and past) academic work can visit [this](https://www.sciencedirect.com/topics/computer-science/median-filter).
+
+
+## Implementation
+
+The principle of the median filter is to replace the gray level of each pixel by the median of the gray levels in a neighborhood of the pixels, instead of using the average operation.
+A simplified pseudo-code implementation of the median filtering algorithm is shown below.
+
+```plaintext
+for each pixel:
+	load filter window - filterH x filterW centred @ pixel 
+	sort the window
+	store median value as output
+```
+
+A naive CPU implementation of the same can be found at `medianFilter_cpu()` in `cpuLib.cpp`. You must implement an efficient algorithm for GPU.
+> Think carefully about which loops to parallelize and which to execute sequentially inside the GPU kernel.
+
+Make sure you handle the edges of the image where the filter window may expand beyond the dimensions of the image. 
+> - Try to solve this at the algorithmic level instead of padding the image
+> - As an optional exercise you can try to pad the image at CPU or GPU and report the overall performance impact of this additional step.
+> - You may implement this in the `medianFilter_cpu()` **prior** to starting on your `medianFilter_gpu()`.
+
+
+### Steps
+
+1. Complete the CPU implementation
+	- verify visually using the `viewImageBytes.py` script.
+1. Write `runGpuMedianFilter()` as entrypoint function.
+1. Write the kernel `medianFilter_gpu()`
+1. Write the kernel `sort_gpu()` to sort the filter window
+	- Choose the sorting algorithm of **your choice**.
+	- Carefully weigh (_or better yet, measure_ - **optional**) 
+		- the effects of a sequential vs recursive implementation (if applicable) 
+		- and their effects on the SIMT stack.
+
+## Optimizing the Kernels
+
+- This assignment is tightly coupled with the course material - utilize your understanding of the GPU architecture and the memory heirarchy to squeeze out the best performance for your kernel. 
+- Repeated profiling with `nvprof` will help you compare the design options and evaluate the impact of your choices. 
+- **Think deeply** and explore the design space in the following aspects
+	- _Careful_ and _Optimal_ usage of [shared memory](https://developer.nvidia.com/blog/using-shared-memory-cuda-cc/) resources [[8]](#8)
+	- Leveraging CPU-to-GPU [data transfer](https://developer.nvidia.com/blog/how-optimize-data-transfers-cuda-cc/) and GPU memory [access and coalescing patterns](https://developer.nvidia.com/blog/how-access-global-memory-efficiently-cuda-c-kernels/) [[6]](#6) [[7]](#7)
+	- Threadblock and grid assignment to shaders 
+		- and how that influences the working set in each cache
+	- the data storage format and access patterns 
+		- to help select which loops to parallelize
+
+
+> Insufficient facts always invites danger, Captain.
+>
+> -- <cite> Cdr. Spock, USS Enterprise </cite>
+
+
+## Setting Up a Python Virtual Environment
+
+Use the following commands to setup and use a python virtual environment. This step is essential to install python packages on scholar without modifying the built-in Python copy.
+
+```bash
+# Create a new python virtual environment in local directory `./python`
+$ python3 -m venv ./python
+
+# Activate your python virtual environment
+# **NOTE** This step must be repeated every time to select your venv as default python distribution
+$ source ./python/bin/activate
+# This step selects your "local" python environment for use instead of the system python installation
+
+# Verify python path
+$ which python3
+/home/ ... /lab2/python/bin/python3
+
+# Install required python packages
+pip3 install numpy pillow
+
+# Learn about the command line arguments
+$ python3 makeBytesImage.py --help
+
+info: No GUI element found - disabling GUI
+
+usage: makeBytesImage.py [-h] [-f FILE] [-l LEVEL] [-r RATIO]
+
+Prepare Image for CUDA Programming Lab 2
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -f FILE     input image file path
+  -l LEVEL    added noise intensity
+  -r RATIO    Salt vs Pepper Ratio
+
+  # Run script 
+$ python makeBytesImage.py -f ./resources/lena512color.tiff
+
+ info: No GUI element found - disabling GUI 
+
+TIFF 512x512 RGB
+(512, 512, 3)
+Storing bytes to - /......./resources/lena512color.tiff.bytes
+786448 bytes written
+ ... Done ! 
+
+```
+
+## Using the `.bytes` file format 
+
+Modern images are stored in compressed formats like `JPEG` which have their own storage formats and compression/decompression schemes. A `custom RAW Pixel` format (`.bytes`) has been defined for the purpose of this class to enable you to quickly convert any image into the RGB pixels and use it with the code developed as part of this assignment. The required Python scripts for interconversion and viewing the original and processed images have been provided.
+
+- `makeBytesImage.py` can be used to convert any given image (tested with `.jpg` and `.tiff` formats) into a `.bytes` file.
+- `viewBytesImage.py` can be used in a GUI-enabled environment to view the contents of a `.bytes` image. 
+
+For details about the command line arguments that can be passed to each script use 
+```bash
+$ python3 makeBytesImage.py --help
+# or
+$ python3 viewBytesImage.py --help
+```
+
+
+> **NOTE** : Viewing the images through any of this scripts will require you to run the scripts on a GUI enabled workspace (ThinClient or your local machines). 
+> 
+> - The scripts still work on console-only workspaces but will have the GIUs disabled.
+> - In non-GUI environments, `makeBytesImage.py` will take console arguments and directly store the output into a `.bytes` file.
+
+
+
+```C++
+// .bytes metadata
+typedef struct ImageDim_t
+{
+	uint32_t height;
+	uint32_t width;
+	uint32_t channels;
+	uint32_t pixelSize;
+} ImageDim;
+```
+
+The bytes format packs any image in a raw 8-bit pixel format comprised of a 16 byte metadata followed by RGB inteleaved data in [little-endian](https://chortle.ccsu.edu/AssemblyTutorial/Chapter-15/ass15_3.html) format . [[5]](https://en.wikipedia.org/wiki/Endianness)
+- For the purpose of this assignment, `all images will have 3 channels and 8-bit (1-Byte) pixels`.
+- The first 16 bytes of any .bytes file will have the metadata required to interpret the contents of the rest of the file (can be used to calculate dimensions and sizes)
+- The remaining bytes in the file will have RGB pixels interleaved.
+- Pixels are stored in Row-Major format.
+
+Look at the contents of `loadImageBytes()` in `cpuLib.cpp` to get an idea of storage format.
+
+|  MetaData  | Px (0,0) | Px (0,1) |  ...  | Px (0,N-1) | Px (1,0) |  ...  | Px (N-1,N-1) |
+|------------| -------- | ---------|-------|------------|----------|-------|--------------|
+|            | R G B    | R G B    | R G B | R G B      | R G B    | R G B | R G B        |
+|  16 bytes  | 3 bytes  | 3 bytes  |       | 3 bytes    | 3 bytes  |       | 3 bytes      |
+
+
+## What to include in your report
+
+- Your parallelization strategy and any optimizations you have included (eg: shared memory resources, memory coaleascing etc)
+- Images showing the effectives of your implementation of median filtering. 
+- Drawbacks (if any) of your implementation.
+
+
+<br>
+
+# PART B: Pooling 
+
+A quick overview of the pooling operation in Neural Networks can be found [here](https://d2l.ai/chapter_convolutional-neural-networks/pooling.html). Read carefully to understand the operation of a pooling layer and its various configuration parameters.
+
+
+> Pooling is a feature commonly imbibed into Convolutional Neural Network (CNN) architectures. The main idea behind a pooling layer is to “accumulate” features from maps generated by convolving a filter over an image. 
+> 
+> Formally, its function is to progressively reduce the spatial size of the representation to reduce the amount of parameters and computation in the network. The most common form of pooling is max pooling.
+>
+> Max pooling is done, in part, to help over-fitting by providing an abstracted form of the representation. As well, it reduces the computational cost by reducing the number of parameters to learn and provides basic translation invariance to the internal representation. Max pooling is done by applying a max filter to (usually) non-overlapping subregions of the initial representation. [[10]](#10)
+
+> The next two labs will introduce a deep neural network in its entirelty and provide you the opportunity to implement a foundational work on DNNs which has been cited > 76k times! -- `AlexNet` (http://www.cs.toronto.edu/~kriz/imagenet_classification_with_deep_convolutional.pdf).
+> For this part, however, you are only required to implement the pooling layer in isolation.
+
+An illustration of the pool operation can be found below
 
 <span style="display:block;text-align:center">\
-    ![monte_carlo_pi image](./monte_carlo_pi.png)
+    ![Pooling Layer Slide](./figures/PoolSlide.png)
 </span>
 
 
+## CPU Implementation
 
-### Estimating _&pi;_
+A basic **incomplete** implementaton of a Max-Pool layer is provided inside `cpuLib.h`. It lays down the API and (after completion) can be used for checking your GPU implementation later.
 
-We will be exploiting the relation between the area of a unit square and the quarter of a unit circle. 
+1. Complete the CPU code for max pooling
+1. Add provisions for padding and strides
+	- implement padding by using conditional statements rather than by actually padding the data.
 
-- Area of a quarter circle  = _&pi; r <sup>2</sup> / 4_     = _&pi; / 4_
-- Area of a unit square     = s <sup>2</sup>                = 1
+<span style="display:block;text-align:center">\
+    ![Pooling Operation](./figures/poolOp.png)
+</span>
 
-We can generate random points all over the area of a unit square and calculate the probability of any such point lying within the unit circle (distance from origin < 1). With a large enough set of points, we will be able to somewhat accurately estimate the value of _&pi;_ to a few decimal points.
+## GPU Implementation
 
-The basic algorithm can be seen in `cpuLib.cpp::runCpuMCPi()` 
-- A large number of random points are generated in the 2D space with `x`, `y` &in; `[0,1)`
-- The distance of each point from the origin is calculated as (x*x + y*y)<sup>0.5</sup>
-- If the point falls within the unit quadrant, it is a `hit`
-- The probability of a `hit` is approximately equal to &pi;/4
-
-
-### CPU Implementation
-
-A CPU-only implementation of the algorithm can be found in `cpuLib.cpp::runCpuMCPi()` which follows the basic steps stated above. The arithmetic portion of determining if a point lies between the unit circle quadrant is shown below.
-
-```c++
-		//	Main CPU Monte-Carlo Code
-		for (size_t idx = 0; idx < MC_SAMPLE_SIZE; ++idx) {
-			x = rand();
-			y = rand();
-			
-			if ( int(x * x + y * y) == 0 ) {
-				++ hitCount;
-			}
-		}
-```
-
-### Generating random points
-
-The standard C/C++ `rand()` function [[2]](https://en.cppreference.com/w/c/numeric/random/rand) [[3]](https://en.cppreference.com/w/cpp/numeric/random/rand) can be used to generate random integral values between `0` and `RAND_MAX`. 
-
-For simplicity, we will treat both the x and y coordinates of a point as uniform random variables but use the same generator for to generate both x and y coordinates.
-
-The starter code uses the `rand()` and `srand()` pair in CPU SAXPY. A more `"proper"` and `C++11` way of generating random numbers using the C++11 `random` library is used in CPU Monte-Carlo. For the curious we have used the `std::random_device` - a uniformly-distributed integer random number generator and the `std::mt19937` - a [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister) pseudo-random generator of 32-bit numbers with a state size of 19937 bits.
+The naive CPU implementation is a set of nested loops - each loop presents an oppornity for parallelization. Choose wisely.
 
 
-### GPU Implementation
+<span style="display:block;text-align:center">\
+    ![Pooling Algorithm](./figures/PoolAlgoSlide.png)
+</span>
 
-The CUDA kernel needs to written such that each GPU thread will process a predefined (constant) number of random points on the x-y plane. The task of identifying an appropriate way of parallelizing the workload is left to you.
-
-Following the CPU implementation, a simple approach would be to generate a large set of random points on the CPU and then using the GPU to figure out whether a point lies within the unit circle. However, for a large set of points (~ 10 <sup>6</sup>) or larger, this will result in a huge data transfers over the (relatively) slow PCIe interface. You are encouraged to try building this application to observe the same effect mentioned above.
-
-A better approach is to utilize the [cuRand](https://docs.nvidia.com/cuda/pdf/CURAND_Library.pdf) library.
-
-An simple way of generating a set of uniform random numbers using the `cuRAND` library is shown below. Refer to the [cuRAND documentation](https://docs.nvidia.com/cuda/curand/introduction.html) for information like the range of values generated etc.
-
-```C++
-	// Setup RNG
-	curandState_t rng;
-	curand_init(clock64(), threadId, 0, &rng);
-
-    // Get a new random value
-    int randInt = curand_uniform(&rng);
-```
-
-A skeleton is already present in the starter code that can be built upon to complete this portion of the assignment. Like Part A, place your host code in `cudaLib.cu::runGpuMCPi()` and the place your device kernel device in `cudaLib.cu`
-
-### OPTIONAL
-
-While running a large Monte-Carlo simulation (>> 1 bn values) you will end up running a large number of threads each of which will generate a count of points within the unit circle. Since this set of `partial-counts` itself might be (>> 1000 values), you might find it useful to write an additional `reduce` kernel to further reduce the set by summing up portions of this set inside the GPU. This will result in a more tractable size of `partial-counts` that can then be summed up in the CPU to arrive at the final probability. This kernel's behavior will be similar to the `Reduce` portion of [Map-Reduce](https://en.wikipedia.org/wiki/MapReduce).
-
-
-# Building and Executing the Project
-
-## Preparing your System
-
-All students will have access to GPU resources through gpu.scholar.rcac.purdue.edu.
-You should be able to use your Purdue Career Accounts to
-ssh into gpu.scholar.rcac.purdue.edu and access a GPU there. You are also free to use your own GPU if you have access to one.
-Contact the instructors on Piazza for any trouble regarding access to the same.
-
-### Check for GPU & Drivers
-The default setup of the machines available for the class has all the software you need to build and test your project. Ensure that the cuda driver is installed and working with the below command.
-
-```bash
-$ nvidia-smi
-+-----------------------------------------------------------------------------+
-| NVIDIA-SMI 440.33.01    Driver Version: 440.33.01    CUDA Version: 10.2     |
-|-------------------------------+----------------------+----------------------+
-| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-|===============================+======================+======================|
-|   0  Tesla V100-PCIE...  Off  | 00000000:D8:00.0 Off |                    0 |
-| N/A   35C    P0    37W / 250W |      0MiB / 16160MiB |      0%      Default |
-+-------------------------------+----------------------+----------------------+
-
-+-----------------------------------------------------------------------------+
-| Processes:                                                       GPU Memory |
-|  GPU       PID   Type   Process name                             Usage      |
-|=============================================================================|
-|  No running processes found                                                 |
-+-----------------------------------------------------------------------------+
-```
-This command can also be used to identify any stray kernels you might have running in the background and kill the corresponding process.
-
-### Setup Environment
-
-Before you start writing and building code, the appropriate development toolkits must be loaded. 
-`This process MUST be repeated every time you login and in every new terminal instance`. We will load the gcc, CUDA and CMake modules to help us with building and executing our application(s).
-
-```bash
-module load gcc cuda cmake
-```
-
-## Project Organization
-
-The project is structured following a standard template to allow easy scalability as well as to facilitate easy verification of your submissions. `Follow the below guidelines strictly.`
-
-- Each lab will have a `main()` file which is the single entry-point and the only executable. For this lab, it is `lab1.cu`
-- The main file will contain a simple interactive shell to allow you to launch routines that are part of the lab. An example of Lab 1's output is shown below. 
-- The main file will utilize libraries that will be divided into header (`/include`) and source (`/src`) files. A skeleton has been provided in Lab 1 to get you started.
-- The majority of the code you will write will be in the `/src` directory but ensure that the header file is updated.
-- All `CUDA` related code must go within a `.cu` file - this includes ALL `device` code and any `host` code that uses any portions of the CUDA API.
-- `CPU-only` portions of the code can be placed within a `.cpp` file - which will be compiled by the `gcc`/`g++` compiler instead of `nvcc`.
-
-### Building an Application
-
-The assignments use [CMake](https://cmake.org/) build system. Since it has a steep learning curve, the necessary `CMakeLists.txt` files have been provided with the starter code. 
-
-- `cmake .` (notice the DOT) is used to update the `Makefiles` 
-- `make` is then used to build the application(s)
-- `make clean` can be used to cleanup the prebuilt binaries and libraries.
-
-The shell commands required to build are listed below along with an expected output.
-
-```bash
- $ cmake .
--- CMake version: 3.15.4
--- USE_CUDA: ON
--- Configuring done
--- Generating done
--- Build files have been written to: /home/...../lab1
-
-```
-
-```bash
- $ make
--- CMake version: 3.15.4
--- USE_CUDA: ON
--- Configuring done
--- Generating done
--- Build files have been written to: /home/....../lab1
-[ 16%] Building NVCC (Device) object src/CMakeFiles/cudaLib.dir/cudaLib_generated_cudaLib.cu.o
-[ 33%] Linking CXX static library libcudaLib.a
-[ 33%] Built target cudaLib
-[ 50%] Building CXX object src/CMakeFiles/cpuLib.dir/cpuLib.cpp.o
-[ 66%] Linking CXX static library libcpuLib.a
-[ 66%] Built target cpuLib
-[ 83%] Building CUDA object CMakeFiles/lab1.dir/lab1.cu.o
-[100%] Linking CXX executable lab1
-[100%] Built target lab1
-```
-
-
-### Launching an Application
-
-```bash
-$ ./lab1
-ECE 695 - Lab 1 
-Select application: 
-  1 - CPU SAXPY 
-  2 - GPU SAXPY 
-  3 - CPU Monte-Carlo Pi 
-  4 - GPU Monte-Carlo Pi 
->
-```
-
-Selecting the appropriate option will result in execution of the corresponding application.
-
--------------------------------------
 
 <br>
 
-## Report
+
+# Reporting your Progress
+
+> Refer to the Lab1 Readme, esp. sections on [Building and Executing the Project](https://github.com/tgrogers/ece695-2021/blob/master/cuda-programming-assignment/cuda-part1.md#building-and-executing-the-project)
+ and [Reporting your Progress](https://github.com/tgrogers/ece695-2021/blob/master/cuda-programming-assignment/cuda-part1.md#report) to build, test and profile your application.
+
+> All the instructions provided in Lab 1 also apply to this Lab
+
+**Each time you login**
+- Load the `gcc`, `cuda` and `cmake` modules
+	To avoid typing this every time, consider adding this command to `~/.bashrc`.
+    ```bash
+    $ module load gcc cuda cmake
+    ```
+	.
+- Activate the python virtual environment setup within the assignment directory
+    ```bash
+    $ cd <LAB2_ROOT_DIR>
+    $ source ./python/bin/activate
+    > (python) user@scholar-fe05:~/...../lab2 $
+    ```
+    Succesful loading of the venv will be indicated by `(python)` in front of the shell prompt as shown in the last line above
+
+## Performance and Speedup
+
+> Time is the only true measure of performance
+
+Please report all metrics and speedups in terms of absolute execution time ( in _&mu;s_ or _ms_ as applicable). _Percentage doesn not convey the actual execution time._
+
+> If you happen to use Unified Virtual Memory (`cudaMallocManaged`) report seperate sets of data for managed and unmanaged device memory.
+
+An example of the `stacked bar chart` format expected for reporting the breakup of workload execution time for the report is given below. _Figure is indicative of format and has no correlation with any profiling graph real or fictional._
 
 
-### Profiling a CUDA Application
+<span style="display:block;text-align:center">\
+    ![stacked bar chart image](./figures/stackedBar.png)
+</span>
 
-The CUDA SDK comes with a built in profiler `nvprof` [[3]](#3). 
+### Graphs
 
-    The nvprof profiling tool enables you to collect and view profiling data from the command-line. nvprof enables the collection of a timeline of CUDA-related activities on both CPU and GPU, including kernel execution, memory transfers, memory set and CUDA API calls and events or metrics for CUDA kernels. Profiling options are provided to nvprof through command-line options. Profiling results are displayed in the console after the profiling data is collected, and may also be saved for later viewing
+Here are some ideas for the graphs that you can use to present your efforts and results in the report.
+1. Stacked bar chart (as in figure) showing execution **time** vs problem size
+1. line or bar chart showing speedup vs naive cpu
+1. chart showing speedup vs optimized cpu (if you make any changes)
+1. chart with performance vs shared memory strategy (size or organization) - same or varying problem size
+1. chart with performance gain acheived by any tenchiques you have applied
 
-Profiling a pre-built application using the profiler is as simple as launching nvprof with the application path as argument.
-
-```bash
-$ nvprof ./lab1
-```
-
-The profiler presents an interactive console which allows you to execute the application as usual and on application termination, provides a categorized table with values like below.
-
-```bash
-           Type  Time(%)      Time     Calls       Avg       Min       Max  Name
- GPU activities:  
- 
-      API calls:   
-```
-
-Refer the profiling section of [CUDA Toolkit Documentation](https://docs.nvidia.com/cuda/profiler-users-guide/index.html#nvprof-overview) for more details about the nvprof tool.
-
-The nvprof output can be used to quantitatively measure the execution time of a CUDA application with a breakdown on the time spent in each kernel or API call. The profiler presents a wealth of information. It is imperative that you become familiar with utilizing the profiler information to measure code performance and the impact of optimization steps / changes in future labs.
-
-### Reporting Profiler Output
-
-We expect you to present the information gleaned from profiling your application in the form of a stacked bar chart with which shows the execution time for varying input sizes with a breakdown of each API-Call or Kernel that takes up a major portion of the execution time. (see `time %` column of nvprof output).
-
-- Illustrate the relation of execution time with each parameter you have varied and tested
-    - eg vectorSize for Part A
-- Illustrate the breakup of execution time in terms of the major time-consumers as reported by `nvprof`
-    - eg Suppose you have tested SAXPY for a set of vector sizes = _V_
-    - for each v &in; _V_
-        - place a bar showing the breakup of execution time in terms the top time-consumers reported by `nvprof`
-- Make sure to label your graph axes and categories correctly.
+Be terse and lucid with explanations of your observations from the trends you observe.
 
 
-Report any observations you have from profiling the code you have written as well as by interpreting the above graph. Try to keep you report within a couple of pages.
+<br> 
 
-
-
+-------
 ## References
+
 <a id="1">[1]</a> 
-[Wikipedia - Monte-Carlo Method](https://en.wikipedia.org/wiki/Monte_Carlo_method)
+[Wikipedia - Median Filtering](https://en.wikipedia.org/wiki/Median_filter)
 
-<a id="cppref">[2]</a>
-[cppreference](https://en.cppreference.com)
+<a id="2">[2]</a> 
+Arias-Castro, Ery; Donoho, David L. Does median filtering truly preserve edges better than linear filtering?. Ann. Statist. 37 (2009), no. 3, 1172--1206. doi:10.1214/08-AOS604. https://projecteuclid.org/euclid.aos/1239369019
 
-<a id="nvprof">[3]</a>
-[CUDA Profiler User Guide](https://docs.nvidia.com/cuda/pdf/CUDA_Profiler_Users_Guide.pdf)
+<a id="3">[3]</a> 
+T. Huang, G. Yang and G. Tang, "A fast two-dimensional median filtering algorithm," in IEEE Transactions on Acoustics, Speech, and Signal Processing, vol. 27, no. 1, pp. 13-18, February 1979, doi: 10.1109/TASSP.1979.1163188. https://ieeexplore.ieee.org/document/1163188
+
+<a id="4">[4]</a> 
+Arce, G.R. (2004). Weighted Median Filters. In Nonlinear Signal Processing, G.R. Arce (Ed.). https://doi-org.ezproxy.lib.purdue.edu/10.1002/0471691852.ch6
+
+<a id="5">[5]</a> 
+[Wikipedia - Endianness](https://en.wikipedia.org/wiki/Endianness)
+
+
+[NVIDIA Developer Blog](https://developer.nvidia.com/blog)  
+<a id="6">[6]</a> 
+	https://developer.nvidia.com/blog/how-optimize-data-transfers-cuda-cc/  
+<a id="7">[7]</a>
+	https://developer.nvidia.com/blog/how-access-global-memory-efficiently-cuda-c-kernels/  
+<a id="8">[8]</a>
+	https://developer.nvidia.com/blog/using-shared-memory-cuda-cc/
+
+
+<a id="10">[10]</a> 
+[DeepAI Max-Pooling](https://deepai.org/machine-learning-glossary-and-terms/max-pooling)
+
+
+

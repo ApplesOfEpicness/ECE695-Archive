@@ -11,8 +11,8 @@
 	// Uncomment this to suppress console output
 	// #define DEBUG_PRINT_DISABLE
 
-	#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-	extern inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true);
+	#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__, true); }
+	extern void gpuAssert(cudaError_t code, const char *file, int line, bool abort);
 
 	/**
 	 * @brief GPU kernel to generate sampleSize points in the 2D plane and 
@@ -85,5 +85,69 @@
 	 */
 	extern double estimatePi(uint64_t generateThreadCount, uint64_t sampleSize, 
 		uint64_t reduceThreadCount, uint64_t reduceSize);
+
+
+
+	//	STUDENT: Add appropriate __global__ , __device__ , or __host__ keywords as applicable
+
+
+	/**
+	 * @brief 
+	 * 
+	 * @param imgPath path to the input .bytes file - to be loaded using loadBytesImage()
+	 * @param outPath path to output .bytes file - to be written to using writeBytesImage()
+	 * @param args settings for median filter
+	 * @return int 
+	 */
+	extern int runGpuMedianFilter (std::string imgPath, std::string outPath, MedianFilterArgs args);
+
+
+	/**
+	 * @brief GPU kernel 
+	 * 
+	 * @param inPixels 	uint8_t *			pointer to input of medianFilter
+	 * @param imgDim 	ImageDim			struct converying the diemnsionality of inPixels
+	 * @param outPixels uint8_t *			pointer to output of medianFilter
+	 * @param args 		MedianFilterArgs	struct with settings for median filter
+	 * @return void
+	 */
+	extern __global__ void medianFilter_gpu (uint8_t * inPixels, ImageDim imgDim, 
+		uint8_t * outPixels, MedianFilterArgs args);
+
+	/**
+	 * @brief GPU kernel to sort a given array
+	 * 
+	 * @param array 	uint8_t *	pointer to the array to be sorted 
+	 *								(Can point to anywhere within the addressable memory heirarchy)
+	 * @param arrayDim 	dim3		provides upto 3 dimensions to convey how the data chunk 
+	 *								pointed to by array is organized
+	 * @return void
+	 */
+	extern __device__ void sortPixels_gpu (uint8_t * array, dim3 arrayDim);
+
+	/**
+	 * @brief CPU entrypoint for GPU based pool operation
+	 *			- allocate required memory on host and device
+	 *			- execute gpu kernel to pool
+	 *			- verify pooling - report # errors
+	 * 
+	 * @param inShape 	dimensions of input tensor
+	 * @param poolArgs 	PoolLayerArgs	parameters of pool operation
+	 * @return int 		number of errors in pooled output
+	 */
+	extern int runGpuPool (TensorShape inShape, PoolLayerArgs poolArgs);
+
+	/**
+	 * @brief GPU kernel to perform 2D Pool operation
+	 * 
+	 * @param input 	float *			pointer to input tensor
+	 * @param inShape 	TensorShape		dimensions of input tensor
+	 * @param output 	float *			pointer to output tensor
+	 * @param outShape 	TensorShape		dimensions of output tensor
+	 * @param args 		PoolLayerArgs	parameters of pool operation
+	 * @return void 
+	 */
+	extern __global__ void poolLayer_gpu (float * input, TensorShape inShape,
+		float * output, TensorShape outShape, PoolLayerArgs args);
 
 #endif

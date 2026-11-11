@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness -I/home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness/include -I/usr/local/cuda/include
+CXX_INCLUDES = -I/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness -I/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/include -I/usr/local/cuda/include
 
-CXX_FLAGS = -g -std=gnu++11
+CXX_FLAGS = -g -std=gnu++14
 

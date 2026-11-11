@@ -5,8 +5,8 @@ cmake_policy(SET CMP0074 NEW)
 
 set(CMAKE_BUILD_TYPE Debug)
 
-# enable C++11 standard
-set(CMAKE_CXX_STANDARD 11)  
+# enable C++14 standard
+set(CMAKE_CXX_STANDARD 14)  
 
 # Project name and a few useful settings. Other commands can pick up the results
 project(
@@ -19,7 +19,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 find_package(CUDA REQUIRED)
 
-list(APPEND CUDA_NVCC_FLAGS "-std=c++11")
+list(APPEND CUDA_NVCC_FLAGS "--std=c++14")
 
 option(USE_CUDA "Use CUDA" ON)
 
@@ -51,10 +51,15 @@ if( ("${CMAKE_VERSION}" VERSION_EQUAL 3.8) OR
         
         # add_executable(saxpy_cpu "${CMAKE_SOURCE_DIR}/src/saxpy_cpu.cpp")
         # add_executable(saxpy_gpu "${CMAKE_SOURCE_DIR}/src/saxpy_gpu.cu")
-        add_executable(lab1 "${CMAKE_SOURCE_DIR}/lab1.cu" "${CMAKE_SOURCE_DIR}/lab1.cuh")
-        target_link_libraries(lab1 cudaLib)
-        target_link_libraries(lab1 cpuLib)
-     
+        add_executable(lab2 "${CMAKE_SOURCE_DIR}/lab2.cu" "${CMAKE_SOURCE_DIR}/lab2.cuh")
+        target_link_libraries(lab2 cudaLib)
+        target_link_libraries(lab2 cpuLib)
+
+        # add_executable(lab1_tester "${CMAKE_SOURCE_DIR}/lab1_tester.cu" "${CMAKE_SOURCE_DIR}/lab1_tester.cuh")
+        # target_link_libraries(lab1_tester cpuLib)
+        # target_link_libraries(lab1_tester cudaLib)
+        # target_link_libraries(lab1_tester -lcublas -lcurand)
+        
         # add_executable(AlexNet ${cpu_header_files} ${cpu_source_files} ${gpu_header_files} ${gpu_source_files})
     else(USE_CUDA)
         add_executable(saxpy ${cpu_header_files} ${cpu_source_files})

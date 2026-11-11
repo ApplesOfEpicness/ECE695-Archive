@@ -1,7 +1,7 @@
-/home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness/CMakeFiles/lab1.dir
-/home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness/CMakeFiles/edit_cache.dir
-/home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness/CMakeFiles/rebuild_cache.dir
-/home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir
-/home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness/src/CMakeFiles/cpuLib.dir
-/home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness/src/CMakeFiles/edit_cache.dir
-/home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness/src/CMakeFiles/rebuild_cache.dir
+/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/CMakeFiles/lab2.dir
+/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/CMakeFiles/edit_cache.dir
+/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/CMakeFiles/rebuild_cache.dir
+/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir
+/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/cpuLib.dir
+/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/edit_cache.dir
+/home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/src/CMakeFiles/rebuild_cache.dir

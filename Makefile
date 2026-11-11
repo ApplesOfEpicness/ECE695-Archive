@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness
+CMAKE_SOURCE_DIR = /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness
+CMAKE_BINARY_DIR = /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness/CMakeFiles /home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/CMakeFiles /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-1-ApplesOfEpicness/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/jerry/ECE60827/cuda-programming-assignment-2-ApplesOfEpicness/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -117,17 +117,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named lab1
+# Target rules for targets named lab2
 
 # Build rule for target.
-lab1: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lab1
-.PHONY : lab1
+lab2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lab2
+.PHONY : lab2
 
 # fast build rule for target.
-lab1/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lab1.dir/build.make CMakeFiles/lab1.dir/build
-.PHONY : lab1/fast
+lab2/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lab2.dir/build.make CMakeFiles/lab2.dir/build
+.PHONY : lab2/fast
 
 #=============================================================================
 # Target rules for targets named cudaLib
@@ -155,29 +155,29 @@ cpuLib/fast:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/cpuLib.dir/build.make src/CMakeFiles/cpuLib.dir/build
 .PHONY : cpuLib/fast
 
-lab1.o: lab1.cu.o
-.PHONY : lab1.o
+lab2.o: lab2.cu.o
+.PHONY : lab2.o
 
 # target to build an object file
-lab1.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lab1.dir/build.make CMakeFiles/lab1.dir/lab1.cu.o
-.PHONY : lab1.cu.o
+lab2.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lab2.dir/build.make CMakeFiles/lab2.dir/lab2.cu.o
+.PHONY : lab2.cu.o
 
-lab1.i: lab1.cu.i
-.PHONY : lab1.i
+lab2.i: lab2.cu.i
+.PHONY : lab2.i
 
 # target to preprocess a source file
-lab1.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lab1.dir/build.make CMakeFiles/lab1.dir/lab1.cu.i
-.PHONY : lab1.cu.i
+lab2.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lab2.dir/build.make CMakeFiles/lab2.dir/lab2.cu.i
+.PHONY : lab2.cu.i
 
-lab1.s: lab1.cu.s
-.PHONY : lab1.s
+lab2.s: lab2.cu.s
+.PHONY : lab2.s
 
 # target to generate assembly for a file
-lab1.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lab1.dir/build.make CMakeFiles/lab1.dir/lab1.cu.s
-.PHONY : lab1.cu.s
+lab2.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lab2.dir/build.make CMakeFiles/lab2.dir/lab2.cu.s
+.PHONY : lab2.cu.s
 
 # Help Target
 help:
@@ -189,10 +189,10 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... cpuLib"
 	@echo "... cudaLib"
-	@echo "... lab1"
-	@echo "... lab1.o"
-	@echo "... lab1.i"
-	@echo "... lab1.s"
+	@echo "... lab2"
+	@echo "... lab2.o"
+	@echo "... lab2.i"
+	@echo "... lab2.s"
 .PHONY : help
 
 
