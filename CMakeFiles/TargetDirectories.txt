@@ -1,7 +1,0 @@
-/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles/lab3.dir
-/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles/edit_cache.dir
-/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/CMakeFiles/rebuild_cache.dir
-/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/src/CMakeFiles/cudaLib.dir
-/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/src/CMakeFiles/cpuLib.dir
-/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/src/CMakeFiles/edit_cache.dir
-/home/jerry/ECE60827/cuda-programming-assignment-4-bonus-ApplesOfEpicness/src/CMakeFiles/rebuild_cache.dir
